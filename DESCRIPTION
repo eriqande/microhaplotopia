@@ -1,0 +1,27 @@
+Package: microhaplotopia
+Type: Package
+Title: Tools for Working with Microhaplot Data a la the SWFSC
+Version: 0.0.1.999
+Authors@R: c(
+    person(given = c("Eric", "C."), family = "Anderson", email = "eric.anderson@noaa.gov", role = c("aut")),
+    person(given = "Anthony", family = "Clemento", email = "anthony.clemento@noaa.gov", role = c("aut", "cre")),
+    person(given = "Neil", family = "Thompson", email = "neil.thompson@noaa.gov", role = c("aut"))
+  )
+Maintainer: Anthony Clemento <anthony.clemento@noaa.gov>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: CC0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+Imports: 
+    dplyr,
+    fs,
+    ggplot2,
+    lubridate,
+    magrittr,
+    readr,
+    stringr,
+    tibble,
+    tidyr,
+    vcfR
