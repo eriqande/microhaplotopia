@@ -1,12 +1,13 @@
-#' Summarize data files grouped by group_id.
+#' Summarize data files grouped by sequencing run.
 #'
 #' Plot summaries of read depth per locus, reads per sample, and haplotypes per
 #' locus by sequencing run. This function can be used for raw or filtered data, but
 #' we think it would be most useful as a quick check of the filtered data before
 #' proceeding to more advanced analyses or data transformations for different programs.
 #' @param datafile dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
-#'  unfiltered data such as hap_raw or filtered data such as long_genos can be used.
-#'  @param num_runs The number of sequencing runs in the datafile.
+#' unfiltered data such as hap_raw or filtered data such as long_genos can be used.
+#'
+#' @param num_runs The number of sequencing runs in the datafile.
 #' @export
 plot_run_statistics <- function(datafile, num_runs) {
 
@@ -17,9 +18,10 @@ plot_run_statistics <- function(datafile, num_runs) {
   }
 
   total_reads_per_locus <- datafile %>%
-    mutate(pos2chop = stri_locate_last(source, regex = "(\\/)") %>% .[1],
-           pos2end = str_length(source),
-           source = str_sub(source, pos2chop, pos2end)) %>%
+    mutate(pos2chop = ifelse(str_detect(source, pattern = "(\\/)") == TRUE,
+                              stringi::stri_locate_last(source, regex = "(\\/)") %>% .[1], 0),
+            pos2end = str_length(source),
+            source = str_sub(source, pos2chop, pos2end)) %>%
     dplyr::select(-pos2chop, -pos2end) %>%
     group_by(indiv.ID, locus, source) %>%
     slice(1) %>%
@@ -32,7 +34,8 @@ plot_run_statistics <- function(datafile, num_runs) {
     facet_wrap(. ~ source, nrow = num_runs)
 
   total_reads_per_indiv <- datafile %>%
-    mutate(pos2chop = stri_locate_last(source, regex = "(\\/)") %>% .[1],
+    mutate(pos2chop = ifelse(str_detect(source, pattern = "(\\/)") == TRUE,
+                             stringi::stri_locate_last(source, regex = "(\\/)") %>% .[1], 0),
            pos2end = str_length(source),
            source = str_sub(source, pos2chop, pos2end)) %>%
     dplyr::select(-pos2chop, -pos2end) %>%
@@ -47,7 +50,8 @@ plot_run_statistics <- function(datafile, num_runs) {
     facet_wrap(. ~ source, nrow = num_runs)
 
   haps_per_locus <- datafile %>%
-    mutate(pos2chop = stri_locate_last(source, regex = "(\\/)") %>% .[1],
+    mutate(pos2chop = ifelse(str_detect(source, pattern = "(\\/)") == TRUE,
+                             stringi::stri_locate_last(source, regex = "(\\/)") %>% .[1], 0),
            pos2end = str_length(source),
            source = str_sub(source, pos2chop, pos2end)) %>%
     dplyr::select(-pos2chop, -pos2end) %>%
