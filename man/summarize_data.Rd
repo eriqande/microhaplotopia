@@ -2,14 +2,15 @@
 % Please edit documentation in R/summarize_data.R
 \name{summarize_data}
 \alias{summarize_data}
-\title{Summarize data files grouped by group_id.}
+\title{Summarize data files grouped by group_var.}
 \usage{
 summarize_data(datafile, group_var)
 }
 \arguments{
 \item{datafile}{dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
-unfiltered data such as hap_raw or filtered data such as long_genos can be used.
-@param group_var Column(s) to summarise input data by. This could be sequencing run,
+unfiltered data such as hap_raw or filtered data such as long_genos can be used.}
+
+\item{group_var}{Column(s) to summarize input data by. This could be sequencing run,
 individual.ID, locus, etc. This must be a quoted column name or a character vector of column names.}
 }
 \description{

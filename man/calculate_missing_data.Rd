@@ -7,7 +7,7 @@
 calculate_missing_data(long_genos)
 }
 \arguments{
-\item{long_genos}{genetic data in long format where each individual has 2 rows per locus.
+\item{long_genos}{genetic data in long format where each sample has 2 rows per locus.
 the sample name must be in the 1st column of the data.}
 }
 \description{
