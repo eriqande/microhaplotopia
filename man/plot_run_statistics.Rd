@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_run_statistics.R
 \name{plot_run_statistics}
 \alias{plot_run_statistics}
-\title{Summarize data files grouped by group_id.}
+\title{Summarize data files grouped by sequencing run.}
 \usage{
 plot_run_statistics(datafile, num_runs)
 }

@@ -5,15 +5,12 @@
 #' function will filter raw amplicon sequencing data. The input file here could be
 #' what was loaded into R using the read_unfiltered_observed() function from this package.
 #' @param hap_raw datafile of unfiltered haplotypes. This could be from a single run or a
-#' large number of runs that have been joined together.
-#'
+#'  large number of runs that have been joined together.
 #' @param haplotype_depth remove haplotypes with less than depth specified here. This is for removing what's
-#' considered potential genotyping errors or depths you don't feel confident about.
-#'
+#'  considered potential genotyping errors or depths you don't feel confident about.
 #' @param total_depth minimum number of reads required for the genotype to be retained.
-#'
 #' @param allele_balance For heterozygotes only. The ratio of the second haplotype read depth to the first
-#' haplotype read depth. For example, genotype with read depth of 30 and 20, the allele balance is 0.66
+#'  haplotype read depth. For example, genotype with read depth of 30 and 20, the allele balance is 0.66
 #' @export
 filter_raw_microhap_data <- function(hap_raw,
                                      haplotype_depth,

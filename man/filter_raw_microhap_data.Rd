@@ -4,8 +4,7 @@
 \alias{filter_raw_microhap_data}
 \title{Filter raw microhaplot output from read_unfiltered_observed().}
 \usage{
-filter_raw_microhap_data(hap_raw, haplotype_depth, total_depth,
-  allele_balance)
+filter_raw_microhap_data(hap_raw, haplotype_depth, total_depth, allele_balance)
 }
 \arguments{
 \item{hap_raw}{datafile of unfiltered haplotypes. This could be from a single run or a

@@ -8,10 +8,10 @@ summarize_data(datafile, group_var)
 }
 \arguments{
 \item{datafile}{dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
- unfiltered data such as hap_raw or filtered data such as long_genos can be used.
+unfiltered data such as hap_raw or filtered data such as long_genos can be used.}
 
- @param group_var Column(s) to summarize input data by. This could be sequencing run,
-  individual.ID, locus, etc. This must be a quoted column name or a character vector of column names.}
+\item{group_var}{Column(s) to summarize input data by. This could be sequencing run,
+individual.ID, locus, etc. This must be a quoted column name or a character vector of column names.}
 }
 \description{
 Calculate the number of individuals, runs, loci, etc for a data file. This function
