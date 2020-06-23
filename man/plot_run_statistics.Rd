@@ -2,14 +2,15 @@
 % Please edit documentation in R/plot_run_statistics.R
 \name{plot_run_statistics}
 \alias{plot_run_statistics}
-\title{Summarize data files grouped by group_id.}
+\title{Summarize data files grouped by sequencing run.}
 \usage{
 plot_run_statistics(datafile, num_runs)
 }
 \arguments{
 \item{datafile}{dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
-unfiltered data such as hap_raw or filtered data such as long_genos can be used.
-@param num_runs The number of sequencing runs in the datafile.}
+unfiltered data such as hap_raw or filtered data such as long_genos can be used.}
+
+\item{num_runs}{The number of sequencing runs in the datafile.}
 }
 \description{
 Plot summaries of read depth per locus, reads per sample, and haplotypes per
