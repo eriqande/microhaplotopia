@@ -3,7 +3,7 @@
 #' Calculate the number of loci with missing data and the number
 #' of loci with genotype data from a long format dataframe.
 #' Both missing and non-missing loci are provided here to allow flexibility for the user.
-#' @param long_genos genetic data in long format where each individual has 2 rows per locus.
+#' @param long_genos genetic data in long format where each sample has 2 rows per locus.
 #' the sample name must be in the 1st column of the data.
 #' @export
 calculate_missing_data <- function(long_genos) {
