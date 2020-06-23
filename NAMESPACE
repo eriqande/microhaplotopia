@@ -2,6 +2,7 @@
 
 export(calculate_missing_data)
 export(filter_raw_microhap_data)
+export(find_contaminated_samples)
 export(find_missing_samples)
 export(mhap_transform)
 export(plot_run_statistics)

@@ -7,7 +7,7 @@
 #' not have any reads assigned to it, that sample will not be identified by this function.
 #' @param raw_data The raw data from a single, or multiple sequencing runs. This could be the output from
 #'  read_unfiltered_observed()
-#' @param filtered_data datafile of filtered haplotypes. This is the output from
+#' @param filtered_data dataframe of filtered haplotypes. This is the output from
 #'  the "filter_raw_microhap_data" function.
 #' @export
 find_missing_samples <- function(raw_data, filtered_data) {

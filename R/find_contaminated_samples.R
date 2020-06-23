@@ -1,6 +1,6 @@
 #' Find potentially contaminated samples
 #'
-#' This function is identifies samples that have more than 2 haplotypes per locus
+#' This function identifies samples that have more than 2 haplotypes per locus
 #' that pass filtering on haplotype depth, total depth and allele balance.
 #' @param raw_data The raw data from a single, or multiple sequencing runs. This could be the output from
 #'  read_unfiltered_observed()

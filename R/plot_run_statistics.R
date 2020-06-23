@@ -1,4 +1,4 @@
-#' Summarize data files grouped by sequencing run.
+#' Summarize data grouped by sequencing run.
 #'
 #' Plot summaries of read depth per locus, reads per sample, and haplotypes per
 #' locus by sequencing run. This function can be used for raw or filtered data, but
@@ -6,8 +6,8 @@
 #' proceeding to more advanced analyses or data transformations for different programs.
 #' @param datafile dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
 #' unfiltered data such as hap_raw or filtered data such as long_genos can be used.
-#' @param output_summary is the summary statistic you want to plot. From experience,
-#' plotting total_reads_per_locus, total_reads_per_indiv and unique_haps_per_locus
+#' @param output_summary summary statistic to plot. Choose one of "total_reads_per_locus",
+#' "total_reads_per_indiv" or "unique_haps_per_locus". Plotting all 3 summary statistics
 #' in a single window is uninterpretable. So look at each summary statistic separately.
 #' @export
 plot_run_statistics <- function(datafile, output_summary) {
