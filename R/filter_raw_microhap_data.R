@@ -33,7 +33,7 @@ filter_raw_microhap_data <- function(hap_raw,
   homozygotes2add <- hap_fil1 %>% filter(gt_type == "hom") %>% mutate(rank = 2)
 
   long_genos <- bind_rows(hap_fil1, homozygotes2add) %>%
-    group_by(indiv.ID, locus) %>%
+    group_by(source, indiv.ID, locus) %>%
     mutate(n_rows = n()) %>%
     ungroup() %>%
     filter(n_rows == 2) %>%
