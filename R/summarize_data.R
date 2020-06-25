@@ -18,11 +18,6 @@ summarize_data <- function(datafile, group_var) {
               group_ids = paste(unique(group), collapse = ", "),
               mean_depth = mean(depth),
               median_depth = median(depth),
-              range_haplodepth = range(depth) %>% paste(collapse = ", ")) %>%
-    mutate(pos2chop = ifelse(str_detect(source, pattern = "(\\/)") == TRUE,
-                                        stringi::stri_locate_last(source, regex = "(\\/)") %>% .[1], 0),
-           pos2end = str_length(source),
-           source = str_sub(source, pos2chop, pos2end)) %>%
-    dplyr::select(-pos2chop, -pos2end)
+              range_haplodepth = range(depth) %>% paste(collapse = ", "))
 
 }

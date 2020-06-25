@@ -13,10 +13,10 @@
 #' @export
 read_unfiltered_observed <- function(datapath) {
 
-  if (any(stringr::str_detect(datapath, "\\.csv$|\\csv.gz$"))) {
+  if (any(stringr::str_detect(datapath, ".csv$|csv.gz$"))) {
     filepath <- datapath
   } else
-    filepath <- fs::dir_ls(datapath, regexp = "\\.csv$|\\csv.gz$")
+    filepath <- fs::dir_ls(datapath, regexp = ".csv$|csv.gz$")
 
   hap_raw <- vroom::vroom(filepath, id = "source", col_names = TRUE) %>%
     dplyr::select("source", "group","indiv.ID", "locus", "haplo", "depth", "allele.balance", "rank")

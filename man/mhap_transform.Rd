@@ -2,20 +2,34 @@
 % Please edit documentation in R/mhap_transform.R
 \name{mhap_transform}
 \alias{mhap_transform}
-\title{Transform long genos to different formats for other analysis programs}
+\title{Transform long genos to different formats for downstream analyses}
 \usage{
-mhap_transform(long_genos, program)
+mhap_transform(long_genos, program, metadata = NULL)
 }
 \arguments{
-\item{long_genos}{datafile of filtered haplotypes. This is the output from
+\item{long_genos}{dataframe of filtered haplotypes. This is the output from
 the "filter_raw_microhap_data" function.}
 
-\item{program}{The program you want to create an input file for. This could be CKMRsim, rubias,
-franz, ADD OTHERS HERE.}
+\item{program}{The program you want to create an input file for. This could be 'CKMRsim',
+'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric',
+'adegenet_2col'ADD OTHERS HERE.}
+
+\item{metadata}{Not required. If supplied, metadata will be joined to genotype data
+before the output file is written. For franz, metadata must be in the following order:
+indiv.ID, birth_year, death_year, sex. Sex is M, F or ? (for unknown).
+For rubias, metadata is in the following order:
+indiv.ID, sample_type, repunit, collection (for details see 'vignette("rubias-overview")')}
 }
 \description{
 Takes a long genotype dataframe and transforms it to be the initial format
-required for different genetic analysis programs. Current options for genetic
-analysis programs include, CKMRsim, rubias, snppit(?), franz(?), adegenet,
+required for different genetic analysis programs.
+Current options for genetic analysis programs include:
+CKMRsim, rubias, snppit(?), franz(?), adegenet,
 structure (?), WHAT ELSE DO PEOPLE COMMONLY USE HERE....
+The \verb{2columnformat_haplotype} is a standard wide dataframe that has 2 columns
+per locus with 1 row per sample. Missing data is coded as \code{NA}
+The \verb{2columnformat_numeric} has haplotypes coded as integers, it returns a list
+of dataframes, the first being the 2 column format named 'data', and the second dataframe
+(named 'key') is the key for haplotype to integer conversion done within the function.
+The 'adegenet_2col' produces a dataframe to be passed into 'adegenet::df2genind'
 }

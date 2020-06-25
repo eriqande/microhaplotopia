@@ -10,7 +10,7 @@ find_missing_samples(raw_data, filtered_data)
 \item{raw_data}{The raw data from a single, or multiple sequencing runs. This could be the output from
 read_unfiltered_observed()}
 
-\item{filtered_data}{datafile of filtered haplotypes. This is the output from
+\item{filtered_data}{dataframe of filtered haplotypes. This is the output from
 the "filter_raw_microhap_data" function.}
 }
 \description{

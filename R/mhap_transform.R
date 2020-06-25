@@ -64,9 +64,9 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
       stop("metadata does not have all individuals present in genotype data")
     }
 
-    haplo2numeric <- df_fil1 %>% distinct(haplo) %>% mutate(haplo_numeric = 1:nrow(.))
+    haplo2numeric <- long_genos %>% distinct(haplo) %>% mutate(haplo_numeric = 1:nrow(.))
 
-    tmp1 <-  df_fil1  %>%
+    tmp1 <-  long_genos  %>%
       left_join(., haplo2numeric, "haplo") %>%
       dplyr::select(indiv.ID, locus, haplo_numeric, rank) %>%
       unite(tmp, locus, rank) %>%
@@ -89,7 +89,7 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
       left_join(., metadata, by = c("indiv.ID" = names(metadata[1]))) %>%
       dplyr::select("indiv.ID", "n_rep", "birth_year", "death_year", "sex", everything())
 
-    n_loci <- n_distinct(df_fil1$locus)
+    n_loci <- n_distinct(long_genos$locus)
     n_samples <- n_distinct(tmp2$indiv.ID)
 
     cat(paste0("1 ", n_loci, " / franzinputdata\n", n_samples, "\n"), file = "franz_input_data.tsv")
@@ -97,7 +97,7 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
 
   } else if (program == "2columnformat_haplotype" ) {
 
-    outp <- df_fil1 %>%
+    outp <- long_genos %>%
       dplyr::select(indiv.ID, locus, rank, haplo) %>%
       rename(indiv = indiv.ID) %>%
       unite(tmp, locus,rank) %>%
@@ -107,9 +107,9 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
 
   } else if (program == "2columnformat_numeric") {
 
-    haplo2numeric <- df_fil1 %>% distinct(haplo) %>% mutate(haplo_numeric = 1:nrow(.))
+    haplo2numeric <- long_genos %>% distinct(haplo) %>% mutate(haplo_numeric = 1:nrow(.))
 
-    outp <- df_fil1 %>%
+    outp <- long_genos %>%
       dplyr::select(indiv.ID, locus, rank, haplo) %>%
       mutate(rank = paste0("a",rank)) %>%
       left_join(., haplo2numeric, "haplo") %>%
@@ -120,21 +120,25 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
 
     outp_list <- list(outp, haplo2numeric)
     names(outp_list) <- c("data", "key")
-    oupt_list
+    outp_list
 
-  } else if (program == "adegenet_2col" ) {
+  } else if (program == "adegenet" ) {
 
-    tmp1 <- df_fil1 %>%
+    tmp <- long_genos %>%
       dplyr::select(indiv.ID, locus, rank, haplo) %>%
       group_by(indiv.ID, locus) %>%
       mutate(gt = paste(haplo, collapse = ",")) %>%
       dplyr::select(-haplo, -rank) %>%
       distinct(indiv.ID, locus, .keep_all = TRUE) %>%
-      spread(locus, gt)
+      spread(locus, gt)  %>% ungroup()
 
-    tmp1[is.na(tmp1)] <- "NA,NA"
+    tmp1 <- tmp %>% dplyr::select(-indiv.ID)
 
-    tmp1
+    tmp2 <- as.matrix(tmp1, rownames.value = tmp$indiv.ID)
+
+    outp <- adegenet::df2genind(tmp2, sep = ",")
+
+    outp
 
   } else {
     stop("program file type not supported in this function, change program to CKMRsim, rubias, franz, etc,

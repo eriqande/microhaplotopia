@@ -9,12 +9,18 @@
 find_duplicates <- function(long_genos) {
 
   dups <- long_genos %>%
-    group_by(indiv.ID, locus) %>%
-    mutate(n_reps = n()) %>%
-    ungroup() %>%
     distinct(source, indiv.ID) %>%
+    group_by(indiv.ID) %>%
+    mutate(n_reps = n()) %>%
+    filter(n_reps > 1) %>%
+    ungroup() %>%
     arrange(indiv.ID) %>%
     dplyr::select(indiv.ID, source)
 
-  dups
+  if (nrow(dups) == 0) {
+    message("No duplicates present. Congratulations!")
+  } else {
+    dups
+  }
+
 }

@@ -7,7 +7,7 @@
 filter_raw_microhap_data(hap_raw, haplotype_depth, total_depth, allele_balance)
 }
 \arguments{
-\item{hap_raw}{datafile of unfiltered haplotypes. This could be from a single run or a
+\item{hap_raw}{dataframe of unfiltered haplotypes. This could be from a single run or a
 large number of runs that have been joined together.}
 
 \item{haplotype_depth}{remove haplotypes with less than depth specified here. This is for removing what's
