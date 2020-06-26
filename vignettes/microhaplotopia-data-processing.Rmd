@@ -1,0 +1,370 @@
+---
+title: "Microhaplotopia-data-processing"
+author: "Neil F. Thompson"
+doutput: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{CKMRsim-example-1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+In this example, we will work through a relatively complete workflow of 
+processing microhaplotype sequencing data. The example data are 
+from Sacramento River winter-run Chinook salmon. 
+
+Before we get started let's load the packages we need.  We'll be using a lot of
+functions from the tidyverse, so let's do it.
+```{r setup}
+library(tidyverse)
+library(microhaplotopia)
+library(kableExtra)
+```
+
+## Reading in the unfiltered_observed data from Microhaplot
+
+The first thing you'll want to do after using microhaplot to call haplotypes is 
+to load all the data into R for further processing. It should be noted you could
+filter in microhaplot, but for large projects with multiple sequencing runs this 
+could be arduous. Hence, 'microhaplotopia' was born.
+
+Microhaplotpia can read in an entire folder of data, a single data file, or a subset
+of files within a folder. We use the same function for this. Supply 'read_unfiltered_observed()'
+with a directory path, a single file path that ends in '.csv' or '.csv.gz', or a vector
+of filepaths that end in in '.csv' or '.csv.gz'
+```{r}
+hap_raw <- read_unfiltered_observed("../inst/extdata/")
+
+hap_raw_file <- read_unfiltered_observed("../inst/extdata/gtseq65_observed_unfiltered_haplotype.csv.gz")
+```
+
+
+Let's take a look at that.
+```{r}
+head(hap_raw) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+This is standard output from 'microhaplot'. We've added a column 'source' that lets the user
+know what file/sequecning run the data came from. This is useful if you are processing
+multiple runs of sequencing data at one time.
+
+## Filter raw haplotype data
+
+The main filtering criteria we use initially is based on individual haplotype depth, total
+read depth of the genotype and the allele balance between haplotype 1 and haplotype 2. 
+
+Allele balance is best explained with an example....
+
+Lets consider the haplotype data of a single sample at one locus.
+```{r, include = FALSE}
+tibble(indiv.ID = rep("fish1",2), locus = rep("locus_A",2), haplo = c("AA", "AT"), depth = c(30,20)) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+The allele balance is calculated by dividing the depth of the AT haplotype by the depth of the AA haplotype.
+In this example, allele balance is 20/30 = 0.66, total depth is calculated by summing depths of 
+individual haplotypes (20 + 30 = 50) and haplotype depth is represented by values in 
+the depth column.
+
+haplotype_depth is the minimum number of reads a haplotype must have to be retained.
+
+total_depth is the minimum number of reads required for the genotype to be retained.
+It should be noted here for homozygotes that haplotype_depth = total_depth. 
+
+allele_balance The ratio of the second haplotype read depth to the first haplotype 
+read depth. For homozygotes this value is 1
+
+
+Now let's get filtering already...
+```{r}
+hap_fil1 <- filter_raw_microhap_data(hap_raw, haplotype_depth = 5,
+                                     total_depth = 20, allele_balance = 0.3)
+
+head(hap_fil1) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+The filtered data has far fewer observations than the raw data.  This isn't too surprising
+because these samples came from carcass samples which are known to have poor DNA quality.
+
+The default settings on 'filter_raw_microhap_data' remove haplotypes with 'X'
+nucleotides in them. 'X' is likely coding for indel variation. If you want to retain 
+indel variation set 'retain_x_haps = TRUE'. 
+
+# Find missing samples
+
+At this point it would be useful to know which samples were filtered out completely from 
+the raw haplotype data.
+
+```{r}
+missing_samples <- find_missing_samples(hap_raw, hap_fil1)
+
+head(missing_samples) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+There are `r nrow(missing_samples)` samples that were completely removed by our
+filtering criteria. 
+
+To find samples that didn't receive any reads during the sequencing run we'll need
+to query the Sample Sheets that are used by the Illumina sequencing machine.
+These are standard files that the sequencing machine uses to demultiplex the samples.
+Unfortunately, these files have a supremely annoying header chunk that means nothing
+to us (at least to me). Open one of the Sample Sheet files (using your favorite program...excel, textwrangler,
+whatever floats your boat) and determine what row the useful information
+begins on. We'll need that number in the following function. If you already chopped that 
+annoying header off then set n_skip  = 0
+
+#### NEED TO DO <- GRAB SampleSheet for chinook GTseq65 from AC or Cassie and put in "extdata/samplesheet/"
+
+```{r}
+#metadata <- read_samplesheets(datapath = "./inst/extdata/gtseq65_SampleSheet.csv", n_skip = 0)
+
+#complete_fails <- metadata %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
+
+#head(complete_fails)
+```
+
+
+Now we have identified all the samples which are missing from the filtered data set.
+
+# Find duplicates
+
+In large projects you may have run a sample on more than one sequencing run. It's
+useful to know about those before going on to conduct analyses. Let's identify those
+now.
+
+For illustration purposes I'm going to hack a duplicate dataframe together. You don't need
+to do this.
+
+```{r}
+duplicate_df <- hap_fil1 %>%
+  distinct(indiv.ID, source, .keep_all = TRUE) %>%
+  mutate(source = "fake_run") %>%
+  bind_rows(., hap_fil1)
+
+duplicate_samples <- find_duplicates(duplicate_df)
+
+head(duplicate_samples) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+We get a dataframe of samples that were run on multiple sequencing runs. To
+deal with this now, we can remove the sequencing run that had more missing data.
+
+To do that we use the 'resolve_duplicate_samples' function
+
+```{r}
+hap_dups_removed <- resolve_duplicate_samples(duplicate_df)
+```
+
+Coincidentially this dataframe is identical to hap_fil1 because the duplicate_df
+was created from hap_fil1.  
+
+# Remove loci
+
+Let's say you have some loci that just don't work that you want to get rid of.
+Or in a separate analysis you found that some loci violate Hardy-Weinberg
+Equilibrium, or don't have any power for the analysis you want to do (i.e.
+monomorphic loci in parentage analyses), or you just don't like em.
+
+We can remove loci from the processed data using the 'filter_bad_loci' function.
+In the winter-run Chinook population there are a number of loci that don't pass
+Hardy Weinberg Equilibrium tests. The population was severely bottlenecked
+in the early 1990's and has very little genetic variation compared to other
+Chinook salmon from the Sacramento River.  Anyway, let's remove the loci that
+we know are bad.
+
+```{r}
+loci2chuck <- c("tag_id_1079", "tag_id_1227", "tag_id_1629", "tag_id_1692")
+
+hap_fil2 <- filter_bad_loci(long_genos = hap_fil1, bad_loci = loci2chuck)
+
+head(hap_fil2) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+
+# Calculate missing data per sample
+
+At this point I want to know how much missing data per sample there is.
+To do this I'll use 'calculate_missing_data()'
+
+One important note here. The function determines the number of
+loci in the dataframe supplied by the user and assumes that 
+all loci from the sequencing panel are present.
+
+Why is this a potential issue? I'm so glad you asked...
+
+It's possible that all samples failed at 'locus_bleh', but you don't know
+this yet. The total number of loci in the panel is 125, including 'locus_bleh'. 
+
+If you run 'calculate_missing_data' on this dataset, the function will think the 
+number of loci in the panel is 124, because 'locus_bleh' is not in the
+data for any sample. 
+
+A quick way to check that the number of loci used in the function
+matches your expectation is to determine the maximum value of 'n_loci' in the
+output of 'calculate_missing_data' and see if that is the same number of loci in the 
+sequencing panel.
+
+I'll illustrate this situation with an example. I've created a dataframe, 'hap_miss_example'
+where I removed "tag_id_999". In this example "tag_id_999" is equivalent to 'locus_bleh' above.
+
+Now let's calculate missing data, first for 'hap_miss_example'
+
+```{r}
+hap_miss_example <- hap_fil1 %>% 
+  filter(!locus == "tag_id_999") 
+
+calculate_missing_data(hap_miss_example) %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+Astute observers would notice that there are 124 loci in this dataframe. The
+number of loci should be 125. This is something to watch out for and is one 
+of the reasons that 'calculate_missing_data' determines the number of missing
+loci as well as the number of loci with genotype data.
+
+# Filter missing data
+
+To remove samples that have lots of missing data we'll use
+'filter_missing_data'
+
+'n_miss' is the maximum number of loci with missing data for a sample
+to be retained. Samples with more than 'n_miss' loci with missing
+data are removed.
+
+```{r}
+hap_fil3 <- filter_missing_data(long_genos = hap_fil2, n_miss = 10)
+
+head(hap_fil3) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+This concludes the filtering section.  Now let's check out some data summaries.
+
+
+# Summary table
+
+To get a summary of the data you have a few options. There is a function that
+graphs data, and a function that creates a summary table.
+
+Let's start with the table format.
+
+'summarize_data' can summarize the data based on any combination of 
+columns you want. The column names that you want to group by are 
+supplied to the 'group_var' parameter. 
+
+This could be a single column name...
+
+```{r}
+summarize_data(hap_fil3, group_var = "source") %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+Or a character vector of multiple column names....
+```{r}
+summarize_data(hap_fil3, group_var = c("source", "indiv.ID")) %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+To produce graphical summaries of the data we'll use 'plot_run_statistics'
+
+There are 3 available summaries of the data to graph
+
+  1. 'total_reads_per_locus'
+  
+  1. 'total_reads_per_indiv'
+  
+  1. 'unique_haps_per_locus'
+  
+```{r}
+plot_run_statistics(datafile = hap_fil3, output_summary = 'total_reads_per_locus')
+```
+
+```{r}
+plot_run_statistics(datafile = hap_fil3, output_summary = 'total_reads_per_indiv')
+```
+
+```{r}
+plot_run_statistics(datafile = hap_fil3, output_summary = 'unique_haps_per_locus')
+```
+
+A word of warning. If you have many sequenicing runs in your data (multiple source files)
+the plots can become gnarly and not very useful. Not to mention it takes longer than 
+I like to sit around waiting for the plots to be produced. So, if you have more than
+4 or so sequencing runs I'd suggest subsetting the data and feeding the 
+'plot_run_statistics' the subsetted dataframes. This will make the interpretation
+of the plots a possibility for humans and you won't be waiting for your computer
+to generate the graphics for too long.
+
+# Transforming data to a desired output type
+
+'microhaplotopia' uses 'tidy' dataframe structure because it makes life easy for 
+processing large amounts of data, but many genetic analysis softwares uses different
+data formats as input. 
+
+In this package I've made an attempt to write code to produce input files for
+commonly used genetic software programs by the NOAA SWFSC Molecular Ecology and 
+Genetic Analysis team.
+
+Current options for processed data output include:
+
+  1. two-column format with haplotypes. 
+  This is a standard output format for genetic data
+  
+  1. two-column format with numerically coded haplotypes. 
+  This option outputs a list of dataframes which include 'data' 
+  (the numerically coded data) and 'key', which is the key for haplotypes
+  to integer conversion used to produce the data.
+  
+  1. CKMRsim input. This output type is equivalent to 'long_genos' in 'vignette("CKMRsim-example-1")'
+  
+  1. rubias input. For genetic-stock-identification analyses
+  
+  1. FRANz input. This will write a file 'franz_input_data.tsv' that is equivalent to a 'dat' file.
+  To create a FRANz input file you *must* supply required metadata.
+  
+  1. adegenet input. This creates a 'genind' object commonly used in 'adegenet'
+
+```{r}
+mhap_transform(hap_fil3, program = '2columnformat_haplotype') %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+```{r}
+two_col_numeric <- mhap_transform(hap_fil3, program = "2columnformat_numeric")
+
+two_col_numeric$data %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+
+two_col_numeric$key %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+```{r}
+mhap_transform(hap_fil3, "CKMRsim") %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+```{r}
+mhap_transform(hap_fil3, "rubias") %>% head() %>%
+  kable("html") %>% kable_styling(full_width = FALSE)
+```
+
+```{r}
+mhap_transform(hap_fil3, "adegenet") %>% head()
+```
+

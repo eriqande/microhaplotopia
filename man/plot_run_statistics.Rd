@@ -2,15 +2,17 @@
 % Please edit documentation in R/plot_run_statistics.R
 \name{plot_run_statistics}
 \alias{plot_run_statistics}
-\title{Summarize data files grouped by sequencing run.}
+\title{Summarize data grouped by sequencing run.}
 \usage{
-plot_run_statistics(datafile, num_runs)
+plot_run_statistics(datafile, output_summary)
 }
 \arguments{
 \item{datafile}{dataframe of microhaplotype data. This can be filtered or unfiltered data. For example,
 unfiltered data such as hap_raw or filtered data such as long_genos can be used.}
 
-\item{num_runs}{The number of sequencing runs in the datafile.}
+\item{output_summary}{summary statistic to plot. Choose one of "total_reads_per_locus",
+"total_reads_per_indiv" or "unique_haps_per_locus". Plotting all 3 summary statistics
+in a single window is uninterpretable. So look at each summary statistic separately.}
 }
 \description{
 Plot summaries of read depth per locus, reads per sample, and haplotypes per

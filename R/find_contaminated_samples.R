@@ -1,11 +1,14 @@
 #' Find potentially contaminated samples
 #'
-#' This function is identifies samples that have more than 2 haplotypes per locus
+#' This function identifies samples that have more than 2 haplotypes per locus
 #' that pass filtering on haplotype depth, total depth and allele balance.
 #' @param raw_data The raw data from a single, or multiple sequencing runs. This could be the output from
 #'  read_unfiltered_observed()
 #' @export
-find_contaminated_samples <- function(raw_data, haplotype_depth, total_depth, allele_balance) {
+find_contaminated_samples <- function(raw_data,
+                                      haplotype_depth,
+                                      total_depth,
+                                      allele_balance) {
 
   hap_fil1 <- raw_data %>%
     filter(!str_detect(haplo, "N|X"),
@@ -26,8 +29,7 @@ find_contaminated_samples <- function(raw_data, haplotype_depth, total_depth, al
     group_by(indiv.ID, locus) %>%
     mutate(n_rows = n()) %>%
     ungroup() %>%
-    filter(n_rows > 2) %>%
-    distinct(source, indiv.ID, locus, .keep_all = TRUE)
+    filter(n_rows > 2)
 
   long_genos
 
