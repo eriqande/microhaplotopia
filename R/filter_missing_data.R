@@ -1,14 +1,13 @@
 #' Remove samples with too much missing data
 #'
-#' This function is designed to remove samples from a data frame that
+#' This function removes samples from a data frame that
 #' have too much missing data.
 #' @param long_genos A dataframe in long format (i.e. tidy format) that samples
 #' are to be removed from. This could be the output dataframe from
 #' 'filter_raw_microhap_data'
-#' @param n_miss The number of loci with missing data. This is used as the
-#' filtering criteria. Samples with less than or equal to 'n_miss' loci
-#' with missing data will be retained. Samples with more than 'n_miss'
-#' loci with missing data are removed.
+#' @param n_miss The maximum number of loci with missing data for a sample
+#' to be retained. Samples with more than 'n_miss' loci with missing
+#' data are removed.
 #' @export
 filter_missing_data <- function(long_genos, n_miss) {
 

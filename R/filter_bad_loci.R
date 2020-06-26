@@ -1,4 +1,4 @@
-#' Remove bad loci from data frame
+#' Remove loci from data frame
 #'
 #' Removes loci that the user determined were not useful, or
 #' do not pass hardy-weinberg equilibrium, or you just don't
