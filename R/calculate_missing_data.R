@@ -10,7 +10,7 @@ calculate_missing_data <- function(long_genos) {
 
   #insert error check, does long_genos has 2 rows per individual per locus?
   test_df <- long_genos %>%
-    count(indiv.ID,locus) %>%
+    count(source,indiv.ID,locus) %>%
     distinct(n) %>% pull(n)
 
   if (!test_df == 2) {
@@ -20,7 +20,7 @@ calculate_missing_data <- function(long_genos) {
     n_loci <- long_genos %>% distinct(locus) %>% nrow(.)
 
     missing_df <- long_genos %>%
-      distinct(indiv.ID,locus) %>%
+      distinct(source,indiv.ID,locus) %>%
       count(indiv.ID) %>%
       mutate(n_miss = n_loci - n) %>%
       rename(n_loci = n)
