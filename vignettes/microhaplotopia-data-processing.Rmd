@@ -44,7 +44,10 @@ with a directory path, a single file path that ends in '.csv' or '.csv.gz', or a
 of filepaths that end in in '.csv' or '.csv.gz'
 ```{r}
 hap_raw <- read_unfiltered_observed(
-  datapath = system.file("extdata", package = "microhaplotopia")
+  datapath = system.file(
+    "extdata",
+    package = "microhaplotopia"
+  )
 )
 
 
@@ -209,9 +212,17 @@ Chinook salmon from the Sacramento River.  Anyway, let's remove the loci that
 we know are bad.
 
 ```{r}
-loci2chuck <- c("tag_id_1079", "tag_id_1227", "tag_id_1629", "tag_id_1692")
+loci2chuck <- c(
+  "tag_id_1079", 
+  "tag_id_1227", 
+  "tag_id_1629", 
+  "tag_id_1692"
+)
 
-hap_fil2 <- filter_bad_loci(long_genos = hap_fil1, bad_loci = loci2chuck)
+hap_fil2 <- filter_bad_loci(
+  long_genos = hap_fil1,
+  bad_loci = loci2chuck
+)
 
 head(hap_fil2) %>%
   kable("html") %>%
@@ -296,14 +307,20 @@ supplied to the 'group_var' parameter.
 This could be a single column name...
 
 ```{r}
-summarize_data(hap_fil3, group_var = "source") %>%
+summarize_data(
+  datafile = hap_fil3,
+  group_var = "source"
+) %>%
   kable("html") %>%
   kable_styling(full_width = FALSE)
 ```
 
 Or a character vector of multiple column names....
 ```{r}
-summarize_data(hap_fil3, group_var = c("source", "indiv.ID")) %>%
+summarize_data(
+  datafile = hap_fil3,
+  group_var = c("source", "indiv.ID")
+) %>%
   kable("html") %>%
   kable_styling(full_width = FALSE)
 ```
@@ -319,15 +336,24 @@ There are 3 available summaries of the data to graph
   1. 'unique_haps_per_locus'
   
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = "total_reads_per_locus")
+plot_run_statistics(
+  datafile = hap_fil3,
+  output_summary = "total_reads_per_locus"
+)
 ```
 
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = "total_reads_per_indiv")
+plot_run_statistics(
+  datafile = hap_fil3,
+  output_summary = "total_reads_per_indiv"
+)
 ```
 
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = "unique_haps_per_locus")
+plot_run_statistics(
+  datafile = hap_fil3,
+  output_summary = "unique_haps_per_locus"
+)
 ```
 
 A word of warning. If you have many sequenicing runs in your data (multiple source files)
@@ -368,14 +394,20 @@ Current options for processed data output include:
   1. adegenet input. This creates a 'genind' object commonly used in 'adegenet'
 
 ```{r}
-mhap_transform(hap_fil3, program = "2columnformat_haplotype") %>%
+mhap_transform(
+  long_genos = hap_fil3,
+  program = "2columnformat_haplotype"
+) %>%
   head() %>%
   kable("html") %>%
   kable_styling(full_width = FALSE)
 ```
 
 ```{r}
-two_col_numeric <- mhap_transform(hap_fil3, program = "2columnformat_numeric")
+two_col_numeric <- mhap_transform(
+  long_genos = hap_fil3,
+  program = "2columnformat_numeric"
+)
 
 two_col_numeric$data %>%
   head() %>%
@@ -389,19 +421,28 @@ two_col_numeric$key %>%
 ```
 
 ```{r}
-mhap_transform(hap_fil3, "CKMRsim") %>%
+mhap_transform(
+  long_genos = hap_fil3, 
+  program = "CKMRsim"
+) %>%
   head() %>%
   kable("html") %>%
   kable_styling(full_width = FALSE)
 ```
 
 ```{r}
-mhap_transform(hap_fil3, "rubias") %>%
+mhap_transform(
+  long_genos = hap_fil3, 
+  program = "rubias"
+) %>%
   head() %>%
   kable("html") %>%
   kable_styling(full_width = FALSE)
 ```
 
 ```{r}
-mhap_transform(hap_fil3, "adegenet") %>% head()
+mhap_transform(
+  long_genos = hap_fil3,
+  program = "adegenet"
+) %>% head()
 ```
