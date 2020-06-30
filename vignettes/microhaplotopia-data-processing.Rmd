@@ -43,16 +43,26 @@ of files within a folder. We use the same function for this. Supply 'read_unfilt
 with a directory path, a single file path that ends in '.csv' or '.csv.gz', or a vector
 of filepaths that end in in '.csv' or '.csv.gz'
 ```{r}
-hap_raw <- read_unfiltered_observed("../inst/extdata/")
+hap_raw <- read_unfiltered_observed(
+  datapath = system.file("extdata", package = "microhaplotopia")
+)
 
-hap_raw_file <- read_unfiltered_observed("../inst/extdata/gtseq65_observed_unfiltered_haplotype.csv.gz")
+
+
+hap_raw_file <- read_unfiltered_observed(
+  system.file(
+    "extdata/gtseq65_observed_unfiltered_haplotype.csv.gz",
+    package = "microhaplotopia"
+  )
+)
 ```
 
 
 Let's take a look at that.
 ```{r}
 head(hap_raw) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 This is standard output from 'microhaplot'. We've added a column 'source' that lets the user
