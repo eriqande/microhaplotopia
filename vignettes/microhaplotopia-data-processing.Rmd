@@ -1,11 +1,11 @@
 ---
 title: "Microhaplotopia-data-processing"
 author: "Neil F. Thompson"
-doutput: 
+output: 
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{CKMRsim-example-1}
+  %\VignetteIndexEntry{Microhaplotopia-data-processing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
