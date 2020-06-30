@@ -78,8 +78,14 @@ Allele balance is best explained with an example....
 
 Lets consider the haplotype data of a single sample at one locus.
 ```{r, include = FALSE}
-tibble(indiv.ID = rep("fish1",2), locus = rep("locus_A",2), haplo = c("AA", "AT"), depth = c(30,20)) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+tibble(
+  indiv.ID = rep("fish1", 2),
+  locus = rep("locus_A", 2),
+  haplo = c("AA", "AT"),
+  depth = c(30, 20)
+) %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 The allele balance is calculated by dividing the depth of the AT haplotype by the depth of the AA haplotype.
@@ -98,11 +104,15 @@ read depth. For homozygotes this value is 1
 
 Now let's get filtering already...
 ```{r}
-hap_fil1 <- filter_raw_microhap_data(hap_raw, haplotype_depth = 5,
-                                     total_depth = 20, allele_balance = 0.3)
+hap_fil1 <- filter_raw_microhap_data(
+  hap_raw,
+  haplotype_depth = 5,
+  total_depth = 20, allele_balance = 0.3
+)
 
 head(hap_fil1) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 The filtered data has far fewer observations than the raw data.  This isn't too surprising
@@ -121,7 +131,8 @@ the raw haplotype data.
 missing_samples <- find_missing_samples(hap_raw, hap_fil1)
 
 head(missing_samples) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 There are `r nrow(missing_samples)` samples that were completely removed by our
@@ -139,11 +150,11 @@ annoying header off then set n_skip  = 0
 #### NEED TO DO <- GRAB SampleSheet for chinook GTseq65 from AC or Cassie and put in "extdata/samplesheet/"
 
 ```{r}
-#metadata <- read_samplesheets(datapath = "./inst/extdata/gtseq65_SampleSheet.csv", n_skip = 0)
+# metadata <- read_samplesheets(datapath = "./inst/extdata/gtseq65_SampleSheet.csv", n_skip = 0)
 
-#complete_fails <- metadata %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
+# complete_fails <- metadata %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
 
-#head(complete_fails)
+# head(complete_fails)
 ```
 
 
@@ -167,7 +178,8 @@ duplicate_df <- hap_fil1 %>%
 duplicate_samples <- find_duplicates(duplicate_df)
 
 head(duplicate_samples) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 We get a dataframe of samples that were run on multiple sequencing runs. To
@@ -202,7 +214,8 @@ loci2chuck <- c("tag_id_1079", "tag_id_1227", "tag_id_1629", "tag_id_1692")
 hap_fil2 <- filter_bad_loci(long_genos = hap_fil1, bad_loci = loci2chuck)
 
 head(hap_fil2) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 
@@ -235,11 +248,13 @@ where I removed "tag_id_999". In this example "tag_id_999" is equivalent to 'loc
 Now let's calculate missing data, first for 'hap_miss_example'
 
 ```{r}
-hap_miss_example <- hap_fil1 %>% 
-  filter(!locus == "tag_id_999") 
+hap_miss_example <- hap_fil1 %>%
+  filter(!locus == "tag_id_999")
 
-calculate_missing_data(hap_miss_example) %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+calculate_missing_data(hap_miss_example) %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 Astute observers would notice that there are 124 loci in this dataframe. The
@@ -260,7 +275,8 @@ data are removed.
 hap_fil3 <- filter_missing_data(long_genos = hap_fil2, n_miss = 10)
 
 head(hap_fil3) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 This concludes the filtering section.  Now let's check out some data summaries.
@@ -281,13 +297,15 @@ This could be a single column name...
 
 ```{r}
 summarize_data(hap_fil3, group_var = "source") %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 Or a character vector of multiple column names....
 ```{r}
 summarize_data(hap_fil3, group_var = c("source", "indiv.ID")) %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 To produce graphical summaries of the data we'll use 'plot_run_statistics'
@@ -301,15 +319,15 @@ There are 3 available summaries of the data to graph
   1. 'unique_haps_per_locus'
   
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = 'total_reads_per_locus')
+plot_run_statistics(datafile = hap_fil3, output_summary = "total_reads_per_locus")
 ```
 
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = 'total_reads_per_indiv')
+plot_run_statistics(datafile = hap_fil3, output_summary = "total_reads_per_indiv")
 ```
 
 ```{r}
-plot_run_statistics(datafile = hap_fil3, output_summary = 'unique_haps_per_locus')
+plot_run_statistics(datafile = hap_fil3, output_summary = "unique_haps_per_locus")
 ```
 
 A word of warning. If you have many sequenicing runs in your data (multiple source files)
@@ -350,31 +368,40 @@ Current options for processed data output include:
   1. adegenet input. This creates a 'genind' object commonly used in 'adegenet'
 
 ```{r}
-mhap_transform(hap_fil3, program = '2columnformat_haplotype') %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+mhap_transform(hap_fil3, program = "2columnformat_haplotype") %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 ```{r}
 two_col_numeric <- mhap_transform(hap_fil3, program = "2columnformat_numeric")
 
-two_col_numeric$data %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+two_col_numeric$data %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 
-two_col_numeric$key %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+two_col_numeric$key %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 ```{r}
-mhap_transform(hap_fil3, "CKMRsim") %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+mhap_transform(hap_fil3, "CKMRsim") %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 ```{r}
-mhap_transform(hap_fil3, "rubias") %>% head() %>%
-  kable("html") %>% kable_styling(full_width = FALSE)
+mhap_transform(hap_fil3, "rubias") %>%
+  head() %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
 ```
 
 ```{r}
 mhap_transform(hap_fil3, "adegenet") %>% head()
 ```
-
