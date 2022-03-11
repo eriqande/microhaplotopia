@@ -15,12 +15,16 @@ considered potential genotyping errors or depths you don't feel confident about.
 
 \item{total_depth}{minimum number of reads required for the genotype to be retained.}
 
-\item{allele_balance}{For heterozygotes only. The ratio of the second haplotype read depth to the first
-haplotype read depth. For example, genotype with read depth of 30 and 20, the allele balance is 0.66}
+\item{allele_balance}{Ratio of the number of reads for a given microhaplotype divided
+by the number of reads of the most common microhaplotype for that individual at that
+locus.  For example, if you have a heterozygote with 60 reads for the haplotype AA and
+100 reads for the haplotype TC, the allele balance for the haplotype AA for that individual
+at that locus is 0.6 and is 1.0 for TC.}
 }
 \description{
 Given a set of filtering criteria on individual haplotype depth, total read depth for
-the genotype and allelle balance (the ratio of read 2 depth to read 1 depth) this
-function will filter raw amplicon sequencing data. The input file here could be
-what was loaded into R using the read_unfiltered_observed() function from this package.
+the genotype and allelle balance (the ratio of a particular microhaplotype read depth
+to read depth of the most common microhaplotype for an individual at a locus) this
+function will filter raw amplicon sequencing data. The input file here could be what
+was loaded into R using the read_unfiltered_observed() function from this package.
 }
