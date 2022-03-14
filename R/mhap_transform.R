@@ -14,8 +14,8 @@
 #' @param long_genos dataframe of filtered haplotypes. This is the output from
 #'  the "filter_raw_microhap_data" function.
 #' @param program The program you want to create an input file for. This could be 'CKMRsim',
-#' 'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric',
-#' 'adegenet_2col'ADD OTHERS HERE.
+#' 'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric', '2columnformat_ndigit',
+#' 'adegenet'ADD OTHERS HERE.
 #' @param metadata Not required. If supplied, metadata will be joined to genotype data
 #' before the output file is written. For franz, metadata must be in the following order:
 #' indiv.ID, birth_year, death_year, sex. Sex is M, F or ? (for unknown).
@@ -122,7 +122,18 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
     names(outp_list) <- c("data", "key")
     outp_list
 
-  } else if (program == "adegenet" ) {
+  } else if (program == "2columnformat_ndigit") {
+    outp <- long_genos %>%
+       dplyr::select(indiv.ID, locus, rank, haplo) %>%
+       mutate(hap.var = chartr("ACGT", "1234", haplo)) %>%
+       select(-haplo) %>%
+       rename(indiv = indiv.ID) %>%
+       unite(loc_rank, locus, rank) %>%
+       spread(loc_rank, hap.var)
+
+    outp
+
+      } else if (program == "adegenet" ) {
 
     tmp <- long_genos %>%
       dplyr::select(indiv.ID, locus, rank, haplo) %>%

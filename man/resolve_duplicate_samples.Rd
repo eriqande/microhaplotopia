@@ -4,12 +4,17 @@
 \alias{resolve_duplicate_samples}
 \title{Resolves duplicate samples}
 \usage{
-resolve_duplicate_samples(long_genos)
+resolve_duplicate_samples(haplo_data, resolve)
 }
 \arguments{
-\item{long_genos}{genetic data in long format where each sample
-has 2 rows per locus. This dataframe could be the output from
-'filter_raw_microhap_data'}
+\item{haplo_data}{genetic data output from 'filter_raw_microhap_data'}
+
+\item{resolve}{Enter "rename" if you wish to keep both runs of this sample and
+"drop" if you want to drop the run with fewer loci genotyped.  The "rename"
+option will sort your reruns by their "group" column in your datset and append
+an "_1" to the first run's name, "_2" to the next, and so on.  The "drop" option
+will not rename your samples, simply drop the run with fewer loci genotyped--if
+they are equal, it will keep whichever one appears first in your dataset.}
 }
 \description{
 If a sample was sequenced on multiple sequencing runs (i.e.

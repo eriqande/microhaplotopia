@@ -4,18 +4,19 @@
 \alias{find_contaminated_samples}
 \title{Find potentially contaminated samples}
 \usage{
-find_contaminated_samples(
-  raw_data,
-  haplotype_depth,
-  total_depth,
-  allele_balance
-)
+find_contaminated_samples(haplo_data, max_alleles = 2)
 }
 \arguments{
-\item{raw_data}{The raw data from a single, or multiple sequencing runs. This could be the output from
-read_unfiltered_observed()}
+\item{haplo_data}{The haplotype from a single, or multiple sequencing runs. This
+could be the output from filter_raw_microhap_data() or read_unfiltered_observed()}
+
+\item{max_alleles}{The maximum number of alleles you'd expect any samples to have
+at a locus (set as 2 by default for diploid individuals)}
 }
 \description{
-This function identifies samples that have more than 2 haplotypes per locus
-that pass filtering on haplotype depth, total depth and allele balance.
+This function identifies samples that have more than 2 haplotypes per locus.
+Input for this function is usually output from filter_raw_microhap_data and used
+to identify potentially contaminated samples.  However, you can run this function
+with your raw data if you want to get a sense for presence of low-read-depth
+bleedthrough in your sequencing run.
 }

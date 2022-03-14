@@ -1,36 +1,24 @@
 #' Find potentially contaminated samples
 #'
-#' This function identifies samples that have more than 2 haplotypes per locus
-#' that pass filtering on haplotype depth, total depth and allele balance.
-#' @param raw_data The raw data from a single, or multiple sequencing runs. This could be the output from
-#'  read_unfiltered_observed()
+#' This function identifies samples that have more than 2 haplotypes per locus.
+#' Input for this function is usually output from filter_raw_microhap_data and used
+#' to identify potentially contaminated samples.  However, you can run this function
+#' with your raw data if you want to get a sense for presence of low-read-depth
+#' bleedthrough in your sequencing run.
+#' @param haplo_data The haplotype from a single, or multiple sequencing runs. This
+#' could be the output from filter_raw_microhap_data() or read_unfiltered_observed()
+#' @param max_alleles The maximum number of alleles you'd expect any samples to have
+#' at a locus (set as 2 by default for diploid individuals)
 #' @export
-find_contaminated_samples <- function(raw_data,
-                                      haplotype_depth,
-                                      total_depth,
-                                      allele_balance) {
+find_contaminated_samples <- function(haplo_data, max_alleles = 2) {
 
-  hap_fil1 <- raw_data %>%
-    filter(!str_detect(haplo, "N|X"),
-           depth >= haplotype_depth) %>%
-    arrange(indiv.ID, locus, desc(depth)) %>%
-    group_by(indiv.ID, locus) %>%
-    mutate(rank = row_number(),
-           allele.balance = depth / depth[1]) %>%
-    filter(allele.balance >= allele_balance) %>%
-    mutate(gt_type = ifelse(n() > 1, "het", "hom"),
-           depth_total = ifelse(gt_type == "het", sum(depth[1], depth[2]), depth)) %>%
-    ungroup() %>%
-    filter(depth_total >= total_depth)
+  if (!("NAlleles" %in% names(haplo_data))) {
+    haplo_data <- haplo_data %>%
+    group_by(group, indiv.ID, locus) %>%
+    mutate(NAlleles = n()) %>%
+    ungroup()}
 
-  homozygotes2add <- hap_fil1 %>% filter(gt_type == "hom") %>% mutate(rank = 2)
-
-  long_genos <- bind_rows(hap_fil1, homozygotes2add) %>%
-    group_by(indiv.ID, locus) %>%
-    mutate(n_rows = n()) %>%
-    ungroup() %>%
-    filter(n_rows > 2)
-
-  long_genos
+  haplo_data %>%
+    filter(NAlleles > max_alleles)
 
 }

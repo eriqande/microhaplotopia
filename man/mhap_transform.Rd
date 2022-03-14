@@ -11,8 +11,8 @@ mhap_transform(long_genos, program, metadata = NULL)
 the "filter_raw_microhap_data" function.}
 
 \item{program}{The program you want to create an input file for. This could be 'CKMRsim',
-'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric',
-'adegenet_2col'ADD OTHERS HERE.}
+'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric', '2columnformat_ndigit',
+'adegenet'ADD OTHERS HERE.}
 
 \item{metadata}{Not required. If supplied, metadata will be joined to genotype data
 before the output file is written. For franz, metadata must be in the following order:

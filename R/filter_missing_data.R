@@ -12,13 +12,13 @@
 filter_missing_data <- function(long_genos, n_miss) {
 
   #insert error check, does long_genos has 2 rows per individual per locus?
-  test_df <- long_genos %>%
-    count(indiv.ID,locus) %>%
-    distinct(n) %>% pull(n)
+#  test_df <- long_genos %>%
+#    count(indiv.ID,locus) %>%
+#    distinct(n) %>% pull(n)
 
-  if (!test_df == 2) {
-    stop("input dataframe does not have 2 rows per locus per individual")
-  }
+#  if (!test_df == 2) {
+#    stop("input dataframe does not have 2 rows per locus per individual")
+#  }
 
   n_loci <- long_genos %>% distinct(locus) %>% nrow(.)
 

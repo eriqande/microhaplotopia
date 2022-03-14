@@ -13,5 +13,5 @@ has 2 rows per locus. This dataframe could be the output from
 }
 \description{
 This function will identify samples that have identical 'indiv.ID' but
-were run on multiple sequencing runs.
+were run on multiple sequencing runs (deonted in "group" column of haplot outputs).
 }
