@@ -19,6 +19,7 @@ find_contaminated_samples <- function(haplo_data, max_alleles = 2) {
     ungroup()}
 
   haplo_data %>%
-    filter(NAlleles > max_alleles)
+    filter(NAlleles > max_alleles) %>%
+    arrange(group, indiv.ID, locus)
 
 }

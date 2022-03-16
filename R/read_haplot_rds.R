@@ -15,10 +15,10 @@ read_haplot_rds <- function(datapath) {
   if (any(stringr::str_detect(datapath, ".rds$"))) {
     filepath <- datapath
   } else
-    filepath <- filepath <- filepath <- fs::dir_ls(datapath, regexp = "\\.rds$") %>%
+    filepath <- fs::dir_ls(datapath, regexp = "\\.rds$") %>%
       .[stringr::str_detect(., "_posinfo", negate = TRUE)]
 
-  Genos <- purr::map_dfr(filepath, read_rds, .id = "source") %>%
+  Genos <- purrr::map_dfr(filepath, readr::read_rds, .id = "source") %>%
     rename(indiv.ID = id) %>%
     select(source, group, indiv.ID, locus, haplo, depth, allele.balance, rank) %>%
     filter(!is.na(indiv.ID)) %>%

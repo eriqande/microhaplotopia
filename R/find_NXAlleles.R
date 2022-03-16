@@ -16,13 +16,13 @@
 find_NXAlleles <- function(haplo_data, NX = "NX") {
   # check for rea
   if (NX == "NX"){
-    Genos_LightFilter %>%
+    haplo_data %>%
       filter(grepl("N|X", haplo))
   } else if (NX == "N") {
-    Genos_LightFilter %>%
+    haplo_data %>%
       filter(grepl("N", haplo))
   } else if (NX == "X") {
-    Genos_LightFilter %>%
+    haplo_data %>%
       filter(grepl("X", haplo))
   } else {
     stop("Please enter 'N', 'X', or 'NX' as NX parameter input.")
