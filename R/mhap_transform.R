@@ -14,15 +14,17 @@
 #' @param long_genos dataframe of filtered haplotypes. This is the output from
 #'  the "filter_raw_microhap_data" function.
 #' @param program The program you want to create an input file for. This could be 'CKMRsim',
-#' 'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric', '2columnformat_ndigit',
-#' 'adegenet'ADD OTHERS HERE.
+#' 'rubias', 'franz', '2col_hap', '2col_numeric', '2col_ndigit', 'adegenet'ADD OTHERS HERE.
 #' @param metadata Not required. If supplied, metadata will be joined to genotype data
 #' before the output file is written. For franz, metadata must be in the following order:
 #' indiv.ID, birth_year, death_year, sex. Sex is M, F or ? (for unknown).
 #' For rubias, metadata is in the following order:
 #' indiv.ID, sample_type, repunit, collection (for details see 'vignette("rubias-overview")')
+#' @param pops Not required.  If you're converting to an adegenet genind object, you can
+#' specify a name of a column here that corresponds to the names of the populations you
+#' wish to use in the genind object.
 #' @export
-mhap_transform <- function(long_genos, program, metadata = NULL) {
+mhap_transform <- function(long_genos, program, metadata = NULL, pops = FALSE) {
 
   #insert error check, does long_genos has 2 rows per individual per locus?
   test_df <- long_genos %>%
@@ -95,7 +97,7 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
     cat(paste0("1 ", n_loci, " / franzinputdata\n", n_samples, "\n"), file = "franz_input_data.tsv")
     write_tsv(tmp2, path = "franz_input_data.tsv", append = TRUE, col_names = FALSE)
 
-  } else if (program == "2columnformat_haplotype" ) {
+  } else if (program == "2col_hap" ) {
 
     outp <- long_genos %>%
       dplyr::select(indiv.ID, locus, rank, haplo) %>%
@@ -105,7 +107,7 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
 
     outp
 
-  } else if (program == "2columnformat_numeric") {
+  } else if (program == "2col_numeric") {
 
     haplo2numeric <- long_genos %>% distinct(haplo) %>% mutate(haplo_numeric = 1:nrow(.))
 
@@ -122,7 +124,7 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
     names(outp_list) <- c("data", "key")
     outp_list
 
-  } else if (program == "2columnformat_ndigit") {
+  } else if (program == "2col_ndigit") {
     outp <- long_genos %>%
        dplyr::select(indiv.ID, locus, rank, haplo) %>%
        mutate(hap.var = chartr("ACGT", "1234", haplo)) %>%
@@ -134,22 +136,47 @@ mhap_transform <- function(long_genos, program, metadata = NULL) {
     outp
 
       } else if (program == "adegenet" ) {
+        if (pops == FALSE) {
+          tmp <- long_genos %>%
+            dplyr::select(indiv.ID, locus, rank, haplo) %>%
+            group_by(indiv.ID, locus) %>%
+            mutate(gt = paste(haplo, collapse = ",")) %>%
+            dplyr::select(-haplo, -rank) %>%
+            distinct(indiv.ID, locus, .keep_all = TRUE) %>%
+            spread(locus, gt)  %>% ungroup()
 
-    tmp <- long_genos %>%
-      dplyr::select(indiv.ID, locus, rank, haplo) %>%
-      group_by(indiv.ID, locus) %>%
-      mutate(gt = paste(haplo, collapse = ",")) %>%
-      dplyr::select(-haplo, -rank) %>%
-      distinct(indiv.ID, locus, .keep_all = TRUE) %>%
-      spread(locus, gt)  %>% ungroup()
+          tmp1 <- tmp %>% dplyr::select(-indiv.ID)
 
-    tmp1 <- tmp %>% dplyr::select(-indiv.ID)
+          tmp2 <- as.matrix(tmp1)
 
-    tmp2 <- as.matrix(tmp1, rownames.value = tmp$indiv.ID)
+          rownames(tmp2) <- tmp$indiv.ID
 
-    outp <- adegenet::df2genind(tmp2, sep = ",")
+          outp <- adegenet::df2genind(tmp2, sep = ",")
 
-    outp
+          outp
+
+        } else {
+          tmp <- long_genos %>%
+            dplyr::select(all_of(silly), indiv.ID, locus, rank, haplo) %>%
+            group_by(indiv.ID, locus) %>%
+            mutate(gt = paste(haplo, collapse = ",")) %>%
+            dplyr::select(-haplo, -rank) %>%
+            distinct(indiv.ID, locus, .keep_all = TRUE) %>%
+            spread(locus, gt)  %>% ungroup()
+
+          pops <- select(tmp, all_of(silly))
+
+          tmp1 <- tmp %>% dplyr::select(-indiv.ID, -all_of(silly))
+
+          tmp2 <- as.matrix(tmp1)
+
+          rownames(tmp2) <- tmp$indiv.ID
+
+          outp <- adegenet::df2genind(tmp2, sep = ",", pop = t(pops))
+
+          outp
+        }
+
 
   } else {
     stop("program file type not supported in this function, change program to CKMRsim, rubias, franz, etc,

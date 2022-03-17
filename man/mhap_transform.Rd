@@ -4,21 +4,24 @@
 \alias{mhap_transform}
 \title{Transform long genos to different formats for downstream analyses}
 \usage{
-mhap_transform(long_genos, program, metadata = NULL)
+mhap_transform(long_genos, program, metadata = NULL, pops = FALSE)
 }
 \arguments{
 \item{long_genos}{dataframe of filtered haplotypes. This is the output from
 the "filter_raw_microhap_data" function.}
 
 \item{program}{The program you want to create an input file for. This could be 'CKMRsim',
-'rubias', 'franz', '2columnformat_haplotype', '2columnformat_numeric', '2columnformat_ndigit',
-'adegenet'ADD OTHERS HERE.}
+'rubias', 'franz', '2col_hap', '2col_numeric', '2col_ndigit', 'adegenet'ADD OTHERS HERE.}
 
 \item{metadata}{Not required. If supplied, metadata will be joined to genotype data
 before the output file is written. For franz, metadata must be in the following order:
 indiv.ID, birth_year, death_year, sex. Sex is M, F or ? (for unknown).
 For rubias, metadata is in the following order:
 indiv.ID, sample_type, repunit, collection (for details see 'vignette("rubias-overview")')}
+
+\item{pops}{Not required.  If you're converting to an adegenet genind object, you can
+specify a name of a column here that corresponds to the names of the populations you
+wish to use in the genind object.}
 }
 \description{
 Takes a long genotype dataframe and transforms it to be the initial format
