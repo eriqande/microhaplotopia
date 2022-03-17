@@ -42,7 +42,7 @@ resolve_duplicate_samples <- function(haplo_data, resolve) {
     #Find the ones to drop
     DropThese <- JustDups %>%
       group_by(group, indiv.ID) %>%
-      summarise(N_Loci = n_distinct(locus)) %>% # Summarize number of loci typed at each rerun
+      summarize(N_Loci = n_distinct(locus)) %>% # Summarize number of loci typed at each rerun
       arrange(desc(N_Loci)) %>% # Arrange from most loci typed to least
       group_by(indiv.ID) %>%
       slice(1) %>% # Keep a list of the runs for each individual with the most loci typed
