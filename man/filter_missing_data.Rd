@@ -4,16 +4,15 @@
 \alias{filter_missing_data}
 \title{Remove samples with too much missing data}
 \usage{
-filter_missing_data(long_genos, n_miss)
+filter_missing_data(long_genos, n_locs)
 }
 \arguments{
 \item{long_genos}{A dataframe in long format (i.e. tidy format) that samples
 are to be removed from. This could be the output dataframe from
 'filter_raw_microhap_data'}
 
-\item{n_miss}{The maximum number of loci with missing data for a sample
-to be retained. Samples with more than 'n_miss' loci with missing
-data are removed.}
+\item{n_locs}{The minmum number of loci a sample must be genotyped at to be kept
+in final dataset. Samples with fewer than "n_locs" loci genotyped will be removed.}
 }
 \description{
 This function removes samples from a data frame that

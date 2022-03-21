@@ -157,22 +157,22 @@ mhap_transform <- function(long_genos, program, metadata = NULL, pops = FALSE) {
 
         } else {
           tmp <- long_genos %>%
-            dplyr::select(all_of(silly), indiv.ID, locus, rank, haplo) %>%
+            dplyr::select(all_of(pops), indiv.ID, locus, rank, haplo) %>%
             group_by(indiv.ID, locus) %>%
             mutate(gt = paste(haplo, collapse = ",")) %>%
             dplyr::select(-haplo, -rank) %>%
             distinct(indiv.ID, locus, .keep_all = TRUE) %>%
             spread(locus, gt)  %>% ungroup()
 
-          pops <- select(tmp, all_of(silly))
+          pops_list <- select(tmp, all_of(pops))
 
-          tmp1 <- tmp %>% dplyr::select(-indiv.ID, -all_of(silly))
+          tmp1 <- tmp %>% dplyr::select(-indiv.ID, -all_of(pops))
 
           tmp2 <- as.matrix(tmp1)
 
           rownames(tmp2) <- tmp$indiv.ID
 
-          outp <- adegenet::df2genind(tmp2, sep = ",", pop = t(pops))
+          outp <- adegenet::df2genind(tmp2, sep = ",", pop = t(pops_list))
 
           outp
         }

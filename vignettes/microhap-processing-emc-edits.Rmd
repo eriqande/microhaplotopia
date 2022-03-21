@@ -247,6 +247,10 @@ if there were any additional samples that didn't even make it through the sequen
 processing pipeline (either didn't sequence at all, or had such low quality reads 
 that they didn't even make it to microhaplot).
 
+Note that samplesheets have a header.  Sometimes we remove the empty rows from the
+header for snakemake, so you may need to set n_skip lower than 21 for your target
+samplesheets.  Just note that n_skip will be consistent across all our files, so
+make sure they either all have empty rows, or all have the empty rows deleted.
 ```{r}
 sampsheets <- read_samplesheets(
   system.file(
@@ -265,9 +269,9 @@ complete_fails <- sampsheets %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
 
 head(complete_fails)
 ```
-Note that if you are using NMFS IDs as the haplot sample IDs (like what happens 
-in our snakemake pipeline) you can split the Sample_Plate info into NMFS ID, Box,
-and Well.  Here's how you might do that!
+If you are using NMFS IDs as the haplot sample IDs (like what we do in our snakemake
+pipeline) you can split the Sample_Plate info into NMFS ID, Box, and Well.  Here's 
+how you might do that!
 
 ```{r}
 sampsheets_NMFSIDs <- sampsheets %>%
@@ -278,3 +282,323 @@ complete_fails_nmfs <- sampsheets_NMFSIDs %>% filter(!NMFS_DNA_ID %in% hap_raw$i
 head(complete_fails)
 ```
 
+# Find duplicates (i.e. reruns)
+
+You may have intentional reruns (i.e. samples with the same sample ID, but were 
+run on different miseq runs for some reason or another).  If this is the case, we
+have a bit of code that can identify samples with the same indiv.ID but different
+groups.
+
+Let's make a quick fake sample dataset that has sample "chinook18699" in there 
+three times: the original run; a second run with group "FakeRun1" and missing the
+genotype from locus "tag_id_2_123"; and a third run with group "FakeRun2" and 
+missing the genotypes from locus "tag_id_2_123" and "tag_id_2_206"
+```{r}
+FakeDupData <- hap_light_filter %>% 
+  filter(indiv.ID == "chinook18699" & locus != "tag_id_2_123") %>%
+  mutate(group = "FakeRun1") %>% 
+  bind_rows(hap_light_filter)
+
+FakeDupData <- hap_light_filter %>% 
+  filter(indiv.ID == "chinook18699" & !(locus %in% c("tag_id_2_123", "tag_id_2_206"))) %>%
+  mutate(group = "FakeRun2") %>% 
+  bind_rows(FakeDupData)
+
+```
+
+And now we can run find_duplicates() to find duplicate samples in our fake
+dataset
+```{r}
+find_duplicates(FakeDupData)
+```
+
+Now at this point we have two options: we can keep all of our runs, but give them 
+unique names so they don't cause any issues moving forward, or we can just keep 
+the one that genotypes at the most loci.
+
+For the first option, we can use the resolve_duplicate_samples() function with
+the "rename" option.  This will rename each of our runs adding an "_1" to the run 
+with the name that appears first when sorted by group, an "_2" to the next one, and
+so on.  Let's see that in action:
+
+```{r}
+FakeDupData_DupsRename <- resolve_duplicate_samples(FakeDupData, resolve = "rename")
+
+#Let's look at just our duplicates to demonstrate how rename works
+head(filter(FakeDupData_DupsRename, grepl("chinook18699", indiv.ID)) %>%
+  arrange(locus, indiv.ID))
+```
+
+If we know we were rerunning these samples because it failed another run, we can 
+just keep whichever run has more loci passing filter with the "drop" option.  In
+our fake case, we know that the original data (group "WRcarc") has the most loci
+passing filter, so if we run this, we should only have data from the "WRcarc" 
+group for fish "chinook18699"
+
+```{r}
+FakeDupData_DupsDropped <- resolve_duplicate_samples(FakeDupData, resolve = "drop")
+
+#Let's look at our duplicate fish and confirm that the only group is now "WRcarc"
+filter(FakeDupData_DupsDropped, grepl("chinook18699", indiv.ID)) %>%
+  distinct(group, indiv.ID)
+```
+
+Yep!  So we can see this drops the other two runs that did not have as many loci 
+genotyped.  If two runs have the same number of loci genotyped, this will keep 
+whichever run appears first in your dataset.
+
+Notice how this ONLY finds samples with the same name.  For some datasets, it is
+entirely possible to find samples that have different IDs but are actually the same
+individual.  We'll go through how to use Rubias to detect that type of duplicate
+in the "Reformatting your data" section below.
+
+# Remove loci
+
+Neil has a "remove_loci" function.  Here's how you might use it to drop loci, but
+you can also totally use anti_join() or filter() in the dplyr package to the same
+effect if you're more comfortable with those.
+
+```{r}
+loci2chuck <- c(
+  "tag_id_1079", 
+  "tag_id_1227", 
+  "tag_id_1629", 
+  "tag_id_1692"
+)
+
+hap_DropLocs <- filter_bad_loci(
+  long_genos = hap_NX_filter,
+  bad_loci = loci2chuck
+)
+
+head(hap_DropLocs) 
+```
+
+# Calculate missing data per sample
+
+We've got a handy calculate_missing_data() function.  Quick note about this function:
+it counts up the total number of loci in your datasetand assumes that's the tptal 
+number of loci you've run for all your samples.  Obviously this is an issue if you have
+a locus that's in your pool but just didn't genotype well with the samples in your datset
+OR if you ran different number of loci for different samples, so look at the outputs in 
+this table carefully, and calculate your own totals if needed.
+
+Let's do a quick example where I drop a locus ("tag_id_999") to illustrate how
+that effects the total number of loci.
+
+```{r}
+hap_miss_example <- hap_NX_filter %>%
+  filter(!locus == "tag_id_999")
+
+calculate_missing_data(hap_miss_example) %>%
+  head()
+```
+
+Note that n_loci is 124, when we know this panel has 125 total loci.  Note that 
+there is also an n_typed column which is the total number of loci typed at that 
+locus as well as an n_miss column (which is just n_loci - n_typed), so you can 
+re-calculate these as needed if your n_loci column is off.
+
+# Filter missing data
+
+Finally, we have a function to remove samples with lots of missing data: 
+filter_missing_data().
+
+The argument 'n_locs' is the minimum number of loci a fish must be genotyped at for
+you to keep it in your final dataset.
+
+Note that this uses the "indiv.ID" column assuming it is unique so you MUST deal
+with duplicate indiv.IDs BEFORE running this function (see "Find duplicates (i.e. 
+reruns)" section abaove).
+
+```{r}
+hap_NoLowTypers <- filter_missing_data(hap_NX_filter, n_locs = 100)
+```
+
+# Add second allele to homozygotes
+
+Currently your dataset has one row for homozygote samples and ideally two for your
+heterozygotes at a locus.  When converting your data to other data formats, you'll 
+need two rows for all of your samples.  This function adds those extra lines in
+for you.  You can do this at any point in your processing after filtering your 
+raw data, but I tend to do it right before I need to convert my data to other formats.
+
+```{r}
+head(arrange(hap_NoLowTypers, indiv.ID, locus))
+
+hap_HomsFixed <- add_homozygote_second_allele(hap_NoLowTypers)
+
+head(arrange(hap_HomsFixed, indiv.ID, locus))
+```
+You can see we now have two lines for each individual at each locus.
+
+# Data summaries
+
+Neil has a couple of functions to summarize your data (summarize_data(), 
+plot_run_statistics()).  I highly recommend that you explore your data.  You can
+use these functions to explore each field of your dataset, but I suggest also 
+looking at your NAlleles, your genotypes with 3+ alleles passing filter, etc. that
+may not be in your possible summary options with those functions.  I also strongly
+suggest looking at logs to make sure every part of your pipeline before your haplot
+run worked as expected.  I'm not going to provide code here as code typically varies 
+dramatically depending on the run and what issues or interesting data you run into
+when you start processing your samples.
+
+#Reformatting your data
+
+Your data is currently in a long formatted tidy-verse object called a "tibble." 
+This makes it super convenient for exploring/summarizing your data, but most
+downstream analyses require your data in a different format.  Neil has made a
+function called "mhap_transform" that converts your data into some usual input 
+files.  I've adjusted/added a few additional ones.  Your current options are:
+
+  1. two-column format with haplotypes ("2col_hap"). 
+  Standard two-column genotype data (two columns for each locus, one for each
+  allele at that locus) where the entries are strings representing the haplotype
+  alleles at that locus.
+  
+  1. two-column format with numerically coded haplotypes ("2col_numeric"). 
+  Same information as 2col_hap, but each unique haplotype is given a unique number
+  (starting at 1 and going up).  This output includes a key that tells you which 
+  number corresponds to which haplotype.
+  
+  1. two-column format with numberically coded haplotypes without key ("2col_ndigit").
+  Same as 2col_hap, but A is coded as 1, C as 2, G as 3, T as 4.  Similar to the
+  2col_numeric, but no need for a key.
+  
+  1. CKMRsim input.  Compatible with Eric Anderson's CKMRsim package.
+  
+  1. rubias input.  Compatible with Eric Anderson's rubias package for GSI analysis
+  (what we are currently using for matching sample analyses).
+  
+  1. FRANz input.  Will export a .tsv file that is equivalent to the .dat input
+  needed for FRANz.  Note that this requires external metadata.
+  
+  1. adegenet input.  Will export a genind object compatible with adegenet. Can 
+  feed it the name of a column you wish to use as populations for your samples if 
+  necessary.
+  
+Here's a quick rundown on how you might run each of these options!
+
+## 2 column haplotype
+Here's a quick look at the 2-column haplotype format
+```{r}
+mhap_transform(hap_HomsFixed, "2col_hap") %>%
+  head()
+```
+(See note after 2 column n-digit for note on missing data NAs vs Os)
+
+## 2 column numeric
+Here's a quick look at the 2-column numeric format
+```{r}
+two_col_numeric <- mhap_transform(hap_HomsFixed, "2col_numeric")
+
+two_col_numeric$data %>%
+  head()
+
+two_col_numeric$key %>%
+  head()
+```
+(See note after 2 column n-digit for note on missing data NAs vs Os)
+
+## 2 column n-digit
+Here's a quick look at the 2-column n-digit format
+```{r}
+mhap_transform(hap_HomsFixed, "2col_ndigit")
+```
+Note that missing data in all of these two-column formats is coded as NA by default.
+Some programs require NAs to be coded as 0s.  I've found the easiest way to do this
+is to write my two-column output to a csv, using the "na" option to code NAs as 0s,
+like so:
+
+```{r}
+two_col_numeric$data %>%
+  write_csv(., "two_col_numeric.csv", na = "0")
+```
+
+## rubias
+
+Here's a quick look at rubias formatting
+```{r}
+haps4rubias <- mhap_transform(
+  long_genos = hap_HomsFixed, 
+  program = "rubias"
+)
+
+head(haps4rubias)
+```
+### matching samples with rubias
+
+Rubias' matching samples function is really fast and awesome, but, being a GSI
+analysis package, expects GSI data.  We can get around that by feeding it bogus
+metadata.  Below is the code for how we do that:
+
+```{r}
+library(rubias)
+
+# Rubias expects samples as part of GSI analysis, so it wants some samples labeled as mixture and some as reference pops.  We lie to it and make this req(uired) tibble of info.  If you're actually running GSI, obviously use metadata here that makes sense instead of making this nonsense req table.
+req <- tibble(sample_type = "mixture", repunit = NA, collection = "silly")
+req[1, 1] = "reference"
+
+#Add your required silly metatata
+ForMatchy <- haps4rubias %>% 
+  cbind(req, .)
+
+#Adjust code below to meet your preferred matching parameters, note that:
+#min_frac_non_miss = minimum fraction of loci a pair of individuals must share in order to be reported as a potential match
+#min_frac_matching = minimum fraction of shared, non-missing loci that must match for samples to be reported as a match
+matches <- close_matching_samples(ForMatchy, 5, min_frac_non_miss = 0.4, min_frac_matching = 0.9)
+```
+And we can see we don't have any matching samples in our dataset.
+
+## adegenet
+
+Here's how you might prep an in-file for adegenet without populations:
+```{r}
+mhap_transform(
+  long_genos = hap_HomsFixed, 
+  program = "adegenet"
+)
+```
+
+And let's say you want to use group as your population (although you can totally
+bind on metadata and use whatever column you want--just feed it that column name
+instead of "group" in the code below):
+```{r}
+mhap_transform(
+  long_genos = hap_HomsFixed, 
+  program = "adegenet",
+  pops = "group"
+)
+```
+
+## CKMRsim
+
+Here's a quick look at CKMRsim formatting
+```{r}
+mhap_transform(
+  long_genos = hap_HomsFixed, 
+  program = "CKMRsim"
+) %>%
+  head()
+```
+
+## FRANz
+
+Finally, here's how you might prep a FRANz file if you had a metadata object called
+"meta"
+
+For franz, your metadata must be in the following order: indiv.ID, birth_year, death_year, 
+sex. Sex is M, F or ? (for unknown).  No additional columns allowed in that object.
+
+**NOTE** I (Ellen) have not tested this function to make sure it's compatible with
+my edits of the other microhaplotopia functions.  Let me know if I broke it and I'm
+happy to fix it.
+
+```{r}
+mhap_transform(
+  long_genos = hap_HomsFixed, 
+  program = "franz",
+  metadata = meta
+)
+```
