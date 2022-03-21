@@ -1,0 +1,280 @@
+---
+title: "microhap-processing-emc-edits"
+author: Ellen M. Campbell
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{microhap-processing-emc-edits}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This is a quick run-down on how you might use microhaplotopia with my (Ellen's) edits
+to process microhaplot data.  I'm going to use the Chinook Neil has loaded into 
+the original microhaplotopia and have left Neil's original vingette so you can
+see how it differs.
+
+I'm going to be doing some example data manipulation to show you what you can do
+with the outputs from the edited microhaplotopia functions so I'm going to load 
+the tidyverse with microhaplotopia.
+
+```{r setup}
+library(tidyverse)
+library(microhaplotopia)
+```
+
+## Reading in the unfiltered_observed data from Microhaplot
+
+I've left Neil's original read_unfiltered_observed function mostly unchanged.
+
+Note that you can read in an entire folder or data, a selection of files within a
+folder, or a single file with this function.  This function is made to read in your
+unfiltered csv outputs from microhaplotopia.
+
+```{r}
+hap_raw <- read_unfiltered_observed(
+  datapath = system.file(
+    "extdata",
+    package = "microhaplotopia"
+  )
+)
+
+
+
+hap_raw_file <- read_unfiltered_observed(
+  system.file(
+    "extdata/gtseq65_observed_unfiltered_haplotype.csv.gz",
+    package = "microhaplotopia"
+  )
+)
+```
+
+Now there is also a function for reading in .rds files!  This works similarly to 
+read_unfiltred_observed--you can feed read_haplot_rds either the haplot rds file
+for the run you're interested in (just make sure you're not giving it the 
+pos_info.rds file from your haplot run) or you can toss it a whole bin of haplot 
+rds files and it will parse through on it's own and pull out just the rds files 
+it needs and ignore the pos_info and annotate rds files that microhaplot also 
+generates.
+
+So you'd run something like:
+```
+hap_raw <- read_haplot_rds("microhaplot_bin")
+```
+Or this, if you're interested in a single run:
+```
+hap_raw <- read_haplot_rds("my_haplot_run.rds")
+```
+(Apologies--no example rds files loaded into this package right now...).
+
+Note that neither of these load in the "Reported haplotype" table from microhaplot.
+This is intentional. With new haplot, the flags for questionable genotypes (genotypes
+with more than your maximum number of alleles) are not included, so you may include
+contaminated samples unless you're VERY careful.  As it's very easy to detect 
+questionable genotypes in R, I suggest filtering your data independently either
+with this package or on your own rather than using the reported haplotype files.
+
+Let's take a quick look at our raw data before we move on:
+```{r}
+head(hap_raw)
+```
+
+Note that this is standard output from 'microhaplot'--if you read in your rds files
+rather than the unfiltered outputs, you will get the same style table (the additional
+columns of cigar strings and other additional information are dropped by read_haplot_rds()).
+
+Also note that there is an extra column--"source".  This notes your file name/location.
+It is not used for filtering/processing in any of the microhaplotopia functions, but
+can still prove very useful for the user to confirm you've read in all the files 
+you need, checking if any of your files are corrupted or truncated, etc. etc.
+
+## Filter raw haplotype data
+
+Neil's original microhaplotopia package bundled all of the filtering steps into 
+one handy function: filter_raw_microhap_data().  I have split that function into
+three distinct parts: filter_raw_microhap_data(), find_NXAlleles(), and 
+find_contaminated_samples().  Let's walk through what each one does and how you 
+might use them.
+
+First, let's filter our data with filter_raw_microhap_data().  
+
+Note that this 
+requires four inputs: your raw data, the minimum haplotype depth, the minimum total
+depth, and the minimum allele balance.  
+
+Minimum haplotype depth is the minimum number of reads a haplotype in an individual
+at a locus can have for you to believe it's real.  You can sometimes get bleedthrough
+from a neighboring cluster in your sequences, so say I had an individual at a locus 
+that has 100 reads of allele1, 80 reads of allele2, and 2 reads of allele3--I'd suspect
+allele3 to just be bleedthrough signal and would drop it before proceeding.  The minimum
+haplotype depth is the minimum depth at which you'd expect to see a real genotype.  So
+if I set this to 5, all alleles observed in an individual at a locus with fewer than 5
+reads will be dropped.
+
+Total depth is the minimum number of reads total you expect to observe in an individual
+at a locus for you to be confident in that individual's genotype.  For example, if I 
+have a fish with 700 reads of an allele and a second fish with 7 reads that same allele,
+I'd obviously be way more confident in my genotype for the first fish than the second 
+fish.  It's possible the second fish could be bleedthrough (see minmum haplotype depth 
+notes above), or had such low signal that I missed an allele and that fish is actually a 
+heterozygote.  If a fish has two or more alleles observed, the read depths are summed 
+across all alleles to calculate total read depth.  For example, a fish with 20 reads for
+allele1 has the same read depth as a fish with 12 reads for allele1 and 8 reads for allele2
+and they have the same read depth as a fish with 8 reads for allele1, 5 reads for allele2, 
+and 7 reads for allele3.
+
+Allele balance is the ratio of reads for an individual haplotype in an individual at a 
+locus to the reads of the most common haplotype for that individual at that locus.  For
+example, if I have a fish with 200 reads of allele1 and 150 reads of allele2 at a locus, 
+the allele balance of allele1 for that fish at that locus is 200/200 = 1; and the 
+allele balance of allele2 for that fish at that locus is 150/200 = 0.75.  We'd expect
+in a perfect word that true heterozygote genotypes would appear with equal numbers of
+reads for both alleles (i.e. an allele balance of 1), but since sequencing is far from 
+perfect, we will often set this parameter WAY lower than 1.
+
+Now that we understand what each parameter is, let's filter our data:
+```{r}
+hap_light_filter <- filter_raw_microhap_data(
+  hap_raw,
+  haplotype_depth = 5,
+  total_depth = 20, 
+  allele_balance = 0.3
+)
+
+head(hap_light_filter)
+```
+
+Note how there's now an additional two columns in our genotype data: "TotalDepth"
+and "NAlleles".  Total depth we discussed above and NAlleles is the total number
+of alleles observed in that individual at that locus post-filtering.  
+
+Quick note here: this function (as well as find_NXAlleles() and find_contaminated_samples())
+does not assume your indiv.ID is unique.  It assumes that the combination of group
+and indiv.ID is uniuqe.  This allows for an individual to be rerun as part of multiple
+groups (i.e. runs if you're using snakemake), and still be filtered/processed as
+independent samples.  We have a set of functions later for dealing with situations with
+duplicate indiv.IDs.
+
+NEXT!  Let's tackle NX alleles.  
+
+Sometimes you run haplot, you get to the end and you find some haplotypes with not
+just A, T, G, C in the sequence, but also N and X.  Ns indicate bases that could not
+be called confidently.  If these appear at either end of your haplotype, it's likely
+your sample was degraded and the sequencer just couldn't get a real read for those end
+bases.  If it's in the middle, we've found that to be an indicator of flashing/processing
+issues.  Xs on the other hand, are very real mutations.  They denote that your target
+base in your haplotype was deleted in that individual.  However, you cannot tell from
+this X how long that deletion was, so there's no way to determine if X in one fish
+is the same deletion as an X in another fish.  While Xs occur naturally on occasion, 
+tons of Xs in a single sample's genotypes across many loci is often a good indicator 
+of a mis-ID'd species.
+
+This handy function pulls out just the haplotype rows that have Ns and Xs in them.
+Typically you'd use this on your lighly filtered data, as bleedthrough noise can
+also be full of Ns and Xs but are not real signals of what's going on in your target
+sample.
+```{r}
+NXAlleles <- find_NXAlleles(hap_light_filter)
+```
+Note that you could pull out Ns and Xs individually with this function like so:
+```{r}
+(NAlleles <- find_NXAlleles(hap_light_filter, NX = "N"))
+
+(XAlleles <- find_NXAlleles(hap_light_filter, NX = "X"))
+```
+
+You can use this table to look for patterns in individuals, loci, and positions
+of Ns and Xs in haplotypes.  Once I'm happy there aren't any weird patterns that 
+suggest severely degraded samples or mis-ID'd fish, I typically will just drop 
+the whole genotype for an individual at a locus where one of the alleles contains 
+an N or an X.  You may choose to try to truncate your haplotypes if you samples 
+look degraded to preserve the data that you do have, or you may drop a whole individual
+from your dataset that looks like it may have been the wrong species.  What you 
+do with this NXAllele table is up to you.  Note that this table is JUST the N and X
+containing haplotypes--there may be other alleles obeserved in these fish at these
+loci that do not contain Ns or Xs.
+
+Here's how I'd drop the whole genotype for an individual at a locus where one of
+the alleles contains and N or X.
+```{r}
+hap_NX_filter <- NXAlleles %>%
+  select(group, indiv.ID, locus) %>%
+  distinct() %>%
+  anti_join(hap_light_filter, .)
+```
+
+NEXT!  Let's look for contamination (i.e. individuals with more than a maximum number
+of alleles at a locus).  Since Chinook are diploid, the maximum alleles we'd expect
+to observe at a locus would be 2 (which is the default for this function).  If you
+expect more than 2 or less than 2 alleles, you can set that with the max_alleles 
+parameter in this function.
+
+```{r}
+BadFishGenos <- find_contaminated_samples(hap_NX_filter)
+
+head(BadFishGenos)
+```
+
+Hey!!  This is a pretty good run, so we don't have any genotypes with extra alleles.
+
+(Add an example with an extra allele to show how output is whole genotype from that
+fish at that locus).
+
+Let's move onto additional filters.
+
+# Find missing samples
+
+At this point you can look for which samples were filtered out completely when we
+filtered our data.
+
+This did not change from Neil's original code
+```{r}
+missing_samples <- find_missing_samples(hap_raw, hap_NX_filter)
+
+head(missing_samples)
+```
+
+Neil also has a handy read_samplesheets() function, so we can use that to determine
+if there were any additional samples that didn't even make it through the sequence
+processing pipeline (either didn't sequence at all, or had such low quality reads 
+that they didn't even make it to microhaplot).
+
+```{r}
+sampsheets <- read_samplesheets(
+  system.file(
+    "extdata/SampleSheets",
+    package = "microhaplotopia"
+  ), 
+  n_skip = 21
+)
+
+#Our samples in the sample sheet are noted "CH" for chinook, but are "chinook" not "CH" in haplot, so fixing that with this next line (also dropping empty rows)
+sampsheets <- sampsheets %>%
+  mutate(Sample_ID = gsub("CH_", "chinook", Sample_ID)) %>%
+  filter(!is.na(Sample_ID))
+
+complete_fails <- sampsheets %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
+
+head(complete_fails)
+```
+Note that if you are using NMFS IDs as the haplot sample IDs (like what happens 
+in our snakemake pipeline) you can split the Sample_Plate info into NMFS ID, Box,
+and Well.  Here's how you might do that!
+
+```{r}
+sampsheets_NMFSIDs <- sampsheets %>%
+  separate(Sample_Plate, into = c("NMFS_DNA_ID", "BOX", "WELL"), extra = "drop")
+
+complete_fails_nmfs <- sampsheets_NMFSIDs %>% filter(!NMFS_DNA_ID %in% hap_raw$indiv.ID)
+
+head(complete_fails)
+```
+

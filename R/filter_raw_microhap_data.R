@@ -22,7 +22,7 @@ filter_raw_microhap_data <- function(hap_raw,
                                      allele_balance) {
   hap_raw %>%
     filter(allele.balance >= allele_balance) %>% #Allele balance filter
-    filter(depth > haplotype_depth) %>% #individual allele depth filter
+    filter(depth >= haplotype_depth) %>% #individual allele depth filter
     group_by(group, indiv.ID, locus) %>%
     mutate(TotalDepth = sum(depth), NAlleles = n()) %>% #Add columns for total depth and number of alleles per locus per individual
     ungroup() %>%

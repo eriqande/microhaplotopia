@@ -16,7 +16,8 @@ read_haplot_rds <- function(datapath) {
     filepath <- datapath
   } else
     filepath <- fs::dir_ls(datapath, regexp = "\\.rds$") %>%
-      .[stringr::str_detect(., "_posinfo", negate = TRUE)]
+      .[stringr::str_detect(., "_posinfo", negate = TRUE)] %>%
+      .[stringr::str_detect(., "_annotate", negate = TRUE)]
 
   Genos <- purrr::map_dfr(filepath, readr::read_rds, .id = "source") %>%
     rename(indiv.ID = id) %>%
