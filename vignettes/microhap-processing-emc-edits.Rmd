@@ -31,7 +31,7 @@ the tidyverse with microhaplotopia.
 library(tidyverse)
 #To install emc-edits branch of microhaplotopia, uncomment the following two lines
 #library(devtools)
-#devtools::install_github("eriqande/microhaplotopia", ref = "emc-edits")
+#devtools::install_github("eriqande/microhaplotopia", ref = "emc-edits", build_vignettes = TRUE)
 library(microhaplotopia)
 ```
 
@@ -564,7 +564,7 @@ Rubias' matching samples function is really fast and awesome, but, being a GSI
 analysis package, expects GSI data.  We can get around that by feeding it bogus
 metadata.  Below is the code for how we do that:
 
-```{r}
+```
 library(rubias)
 
 # Rubias expects samples as part of GSI analysis, so it wants some samples labeled as mixture and some as reference pops.  We lie to it and make this req(uired) tibble of info.  If you're actually running GSI, obviously use metadata here that makes sense instead of making this nonsense req table.
@@ -580,7 +580,7 @@ ForMatchy <- haps4rubias %>%
 #min_frac_matching = minimum fraction of shared, non-missing loci that must match for samples to be reported as a match
 matches <- close_matching_samples(ForMatchy, 5, min_frac_non_miss = 0.4, min_frac_matching = 0.9)
 ```
-And we can see we don't have any matching samples in our dataset.
+If you have rubias installed, you can run this and see we don't have any matching samples in our dataset.
 
 ## adegenet
 
