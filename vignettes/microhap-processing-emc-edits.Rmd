@@ -1,7 +1,9 @@
 ---
 title: "microhap-processing-emc-edits"
 author: Ellen M. Campbell
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{microhap-processing-emc-edits}
   %\VignetteEngine{knitr::rmarkdown}
