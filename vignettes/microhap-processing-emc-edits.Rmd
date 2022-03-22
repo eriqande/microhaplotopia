@@ -477,7 +477,7 @@ run worked as expected.  I'm not going to provide code here as code typically va
 dramatically depending on the run and what issues or interesting data you run into
 when you start processing your samples.
 
-#Reformatting your data
+# Reformatting your data
 
 Your data is currently in a long formatted tidy-verse object called a "tibble." 
 This makes it super convenient for exploring/summarizing your data, but most
