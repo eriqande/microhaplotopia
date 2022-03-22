@@ -7,11 +7,12 @@
 calculate_missing_data(long_genos)
 }
 \arguments{
-\item{long_genos}{genetic data in long format where each sample has 2 rows per locus.
-the sample name must be in the 1st column of the data.}
+\item{long_genos}{genetic data in long format (can be filtered, unfiltered, and
+with or without second homozygote alleles added, but MUST have the column names
+from microhaplot).}
 }
 \description{
-Calculate the number of loci with missing data and the number
-of loci with genotype data from a long format dataframe.
-Both missing and non-missing loci are provided here to allow flexibility for the user.
+Calculate the number of loci total in the dataset (n_loci), the total number
+of loci typed in each individual (n_typed), and the difference between the two
+(n_miss).
 }

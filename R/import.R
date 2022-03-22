@@ -8,6 +8,9 @@
 #' @importFrom tidyr gather spread unite
 #' @importFrom utils write.table
 #' @importFrom purrr map_dfr
+#' @importFrom vroom vroom
+#' @importFrom adegenet df2genind
+#' @importFrom stringi stri_locate_last
 NULL
 
 

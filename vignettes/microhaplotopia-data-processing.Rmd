@@ -190,7 +190,7 @@ deal with this now, we can remove the sequencing run that had more missing data.
 
 To do that we use the 'resolve_duplicate_samples' function
 
-```{r}
+```
 hap_dups_removed <- resolve_duplicate_samples(duplicate_df)
 ```
 
@@ -282,7 +282,7 @@ To remove samples that have lots of missing data we'll use
 to be retained. Samples with more than 'n_miss' loci with missing
 data are removed.
 
-```{r}
+```
 hap_fil3 <- filter_missing_data(long_genos = hap_fil2, n_miss = 10)
 
 head(hap_fil3) %>%
@@ -308,7 +308,7 @@ This could be a single column name...
 
 ```{r}
 summarize_data(
-  datafile = hap_fil3,
+  datafile = hap_fil2,
   group_var = "source"
 ) %>%
   kable("html") %>%
@@ -318,7 +318,7 @@ summarize_data(
 Or a character vector of multiple column names....
 ```{r}
 summarize_data(
-  datafile = hap_fil3,
+  datafile = hap_fil2,
   group_var = c("source", "indiv.ID")
 ) %>%
   kable("html") %>%
@@ -335,21 +335,21 @@ There are 3 available summaries of the data to graph
   
   1. 'unique_haps_per_locus'
   
-```{r}
+```
 plot_run_statistics(
   datafile = hap_fil3,
   output_summary = "total_reads_per_locus"
 )
 ```
 
-```{r}
+```
 plot_run_statistics(
   datafile = hap_fil3,
   output_summary = "total_reads_per_indiv"
 )
 ```
 
-```{r}
+```
 plot_run_statistics(
   datafile = hap_fil3,
   output_summary = "unique_haps_per_locus"
@@ -393,7 +393,7 @@ Current options for processed data output include:
   
   1. adegenet input. This creates a 'genind' object commonly used in 'adegenet'
 
-```{r}
+```
 mhap_transform(
   long_genos = hap_fil3,
   program = "2columnformat_haplotype"
@@ -403,7 +403,7 @@ mhap_transform(
   kable_styling(full_width = FALSE)
 ```
 
-```{r}
+```
 two_col_numeric <- mhap_transform(
   long_genos = hap_fil3,
   program = "2columnformat_numeric"
@@ -420,7 +420,7 @@ two_col_numeric$key %>%
   kable_styling(full_width = FALSE)
 ```
 
-```{r}
+```
 mhap_transform(
   long_genos = hap_fil3, 
   program = "CKMRsim"
@@ -430,7 +430,7 @@ mhap_transform(
   kable_styling(full_width = FALSE)
 ```
 
-```{r}
+```
 mhap_transform(
   long_genos = hap_fil3, 
   program = "rubias"
@@ -440,7 +440,7 @@ mhap_transform(
   kable_styling(full_width = FALSE)
 ```
 
-```{r}
+```
 mhap_transform(
   long_genos = hap_fil3,
   program = "adegenet"

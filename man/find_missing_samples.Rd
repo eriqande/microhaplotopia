@@ -19,4 +19,7 @@ long_genos dataframe produced by filter_raw_microhap_data(). This function is
 written to identify samples that were present in the raw data, but did not have
 any loci that passed the filtering criteria. If a sample failed completely and did
 not have any reads assigned to it, that sample will not be identified by this function.
+Note that this function assumes your indiv.IDs are unique.  If you know you have
+reruns in your data, this is not the function for you--dplyr::anti_join() may better
+suit your needs.
 }

@@ -9,21 +9,11 @@
 #' in final dataset. Samples with fewer than "n_locs" loci genotyped will be removed.
 #' @export
 filter_missing_data <- function(long_genos, n_locs) {
-
-  #insert error check, does long_genos has 2 rows per individual per locus?
-#  test_df <- long_genos %>%
-#    count(indiv.ID,locus) %>%
-#    distinct(n) %>% pull(n)
-
-#  if (!test_df == 2) {
-#    stop("input dataframe does not have 2 rows per locus per individual")
-#  }
-
-long_genos %>%
-    group_by(indiv.ID) %>%
-    mutate(n_loci = n_distinct(locus)) %>%
-    filter(n_loci >= n_locs) %>%
-    select(-n_loci) %>%
-    ungroup()
+  long_genos %>%
+      group_by(indiv.ID) %>%
+      mutate(n_loci = n_distinct(locus)) %>%
+      filter(n_loci >= n_locs) %>%
+      select(-n_loci) %>%
+      ungroup()
 
 }

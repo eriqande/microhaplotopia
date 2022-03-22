@@ -7,11 +7,11 @@
 find_duplicates(long_genos)
 }
 \arguments{
-\item{long_genos}{genetic data in long format where each sample
-has 2 rows per locus. This dataframe could be the output from
-'filter_raw_microhap_data'}
+\item{long_genos}{genetic data in long format. This dataframe could be the output
+from 'filter_raw_microhap_data'}
 }
 \description{
 This function will identify samples that have identical 'indiv.ID' but
-were run on multiple sequencing runs (deonted in "group" column of haplot outputs).
+were run on multiple sequencing runs (denoted in "group" column of microhaplot
+outputs).
 }

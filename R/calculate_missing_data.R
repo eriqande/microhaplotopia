@@ -1,24 +1,13 @@
 #' Calculate number of loci with and without missing data.
 #'
-#' Calculate the number of loci with missing data and the number
-#' of loci with genotype data from a long format dataframe.
-#' Both missing and non-missing loci are provided here to allow flexibility for the user.
-#' @param long_genos genetic data in long format where each sample has 2 rows per locus.
-#' the sample name must be in the 1st column of the data.
+#' Calculate the number of loci total in the dataset (n_loci), the total number
+#' of loci typed in each individual (n_typed), and the difference between the two
+#' (n_miss).
+#' @param long_genos genetic data in long format (can be filtered, unfiltered, and
+#' with or without second homozygote alleles added, but MUST have the column names
+#' from microhaplot).
 #' @export
 calculate_missing_data <- function(long_genos) {
-
-  #insert error check, does long_genos has 2 rows per individual per locus?
-#  test_df <- long_genos %>%
-#    count(group,indiv.ID,locus) %>%
-#    distinct(n) %>% pull(n)
-
-#  if (!test_df == 2) {
-#    stop("input dataframe does not have 2 rows per locus per individual")
-#  }
-
-    n_loci <- long_genos %>% distinct(locus) %>% nrow(.)
-
     missing_df <- long_genos %>%
       mutate(n_loci = n_distinct(locus)) %>%
       group_by(group, indiv.ID, n_loci) %>%
@@ -26,5 +15,4 @@ calculate_missing_data <- function(long_genos) {
       mutate(n_miss = n_loci - n_typed)
 
     missing_df
-
 }

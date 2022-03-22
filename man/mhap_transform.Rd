@@ -29,10 +29,16 @@ required for different genetic analysis programs.
 Current options for genetic analysis programs include:
 CKMRsim, rubias, snppit(?), franz(?), adegenet,
 structure (?), WHAT ELSE DO PEOPLE COMMONLY USE HERE....
-The \verb{2columnformat_haplotype} is a standard wide dataframe that has 2 columns
-per locus with 1 row per sample. Missing data is coded as \code{NA}
-The \verb{2columnformat_numeric} has haplotypes coded as integers, it returns a list
-of dataframes, the first being the 2 column format named 'data', and the second dataframe
+The \verb{2col_hap} is a standard wide dataframe that has 2 columns per locus with
+1 row per sample. Missing data is coded as \code{NA}
+The \verb{2col_numeric} has haplotypes coded as integers, it returns a list of two
+dataframes, the first being the 2 column format named 'data', and the second dataframe
 (named 'key') is the key for haplotype to integer conversion done within the function.
-The 'adegenet_2col' produces a dataframe to be passed into 'adegenet::df2genind'
+The \verb{2col_ndigit} is a hybrid of the other two 2 column formats.  It is a standard
+wide dataframe with 2 columns per locus and row row per sample with haplotypes coded
+as numbers.  However, instead of requiring a key, it codes each base with a digit, so
+A = 1, C = 2, G = 3, T = 4 and missing data is coded as \code{NA} (Note we don't have any
+digits for N or X as of right now).
+The option 'adegenet' produces a genind compatible with adegenet or other R programs
+that use genind objects.  Can be fed the name of a column to use as populations.
 }

@@ -18,9 +18,10 @@ knitr::opts_chunk$set(
 ## Introduction
 
 This is a quick run-down on how you might use microhaplotopia with my (Ellen's) edits
-to process microhaplot data.  I'm going to use the Chinook Neil has loaded into 
-the original microhaplotopia and have left Neil's original vingette so you can
-see how it differs.
+to process microhaplot data.  I'm going to use the Chinook data that Neil has loaded 
+into the original microhaplotopia and have left Neil's original vingette so you can
+see how it differs, but have removed the R denotations around the code chunks so
+R doesn't complain about the functions I've re-written.
 
 I'm going to be doing some example data manipulation to show you what you can do
 with the outputs from the edited microhaplotopia functions so I'm going to load 
@@ -28,6 +29,9 @@ the tidyverse with microhaplotopia.
 
 ```{r setup}
 library(tidyverse)
+#To install emc-edits branch of microhaplotopia, uncomment the following two lines
+#library(devtools)
+#devtools::install_github("eriqande/microhaplotopia", ref = "emc-edits")
 library(microhaplotopia)
 ```
 
@@ -104,13 +108,14 @@ three distinct parts: filter_raw_microhap_data(), find_NXAlleles(), and
 find_contaminated_samples().  Let's walk through what each one does and how you 
 might use them.
 
+### Light filters
+
 First, let's filter our data with filter_raw_microhap_data().  
 
-Note that this 
-requires four inputs: your raw data, the minimum haplotype depth, the minimum total
-depth, and the minimum allele balance.  
+Note that this requires four inputs: your raw data, the minimum haplotype depth, 
+the minimum total depth, and the minimum allele balance.  
 
-Minimum haplotype depth is the minimum number of reads a haplotype in an individual
+**Minimum haplotype depth** is the minimum number of reads a haplotype in an individual
 at a locus can have for you to believe it's real.  You can sometimes get bleedthrough
 from a neighboring cluster in your sequences, so say I had an individual at a locus 
 that has 100 reads of allele1, 80 reads of allele2, and 2 reads of allele3--I'd suspect
@@ -119,7 +124,7 @@ haplotype depth is the minimum depth at which you'd expect to see a real genotyp
 if I set this to 5, all alleles observed in an individual at a locus with fewer than 5
 reads will be dropped.
 
-Total depth is the minimum number of reads total you expect to observe in an individual
+**Total depth** is the minimum number of reads total you expect to observe in an individual
 at a locus for you to be confident in that individual's genotype.  For example, if I 
 have a fish with 700 reads of an allele and a second fish with 7 reads that same allele,
 I'd obviously be way more confident in my genotype for the first fish than the second 
@@ -131,7 +136,7 @@ allele1 has the same read depth as a fish with 12 reads for allele1 and 8 reads 
 and they have the same read depth as a fish with 8 reads for allele1, 5 reads for allele2, 
 and 7 reads for allele3.
 
-Allele balance is the ratio of reads for an individual haplotype in an individual at a 
+**Allele balance** is the ratio of reads for an individual haplotype in an individual at a 
 locus to the reads of the most common haplotype for that individual at that locus.  For
 example, if I have a fish with 200 reads of allele1 and 150 reads of allele2 at a locus, 
 the allele balance of allele1 for that fish at that locus is 200/200 = 1; and the 
@@ -162,6 +167,8 @@ and indiv.ID is uniuqe.  This allows for an individual to be rerun as part of mu
 groups (i.e. runs if you're using snakemake), and still be filtered/processed as
 independent samples.  We have a set of functions later for dealing with situations with
 duplicate indiv.IDs.
+
+### Detecting and handling NX alleles
 
 NEXT!  Let's tackle NX alleles.  
 
@@ -211,6 +218,8 @@ hap_NX_filter <- NXAlleles %>%
   anti_join(hap_light_filter, .)
 ```
 
+### Detecting and handling genotypes with extra alleles
+
 NEXT!  Let's look for contamination (i.e. individuals with more than a maximum number
 of alleles at a locus).  Since Chinook are diploid, the maximum alleles we'd expect
 to observe at a locus would be 2 (which is the default for this function).  If you
@@ -225,8 +234,15 @@ head(BadFishGenos)
 
 Hey!!  This is a pretty good run, so we don't have any genotypes with extra alleles.
 
-(Add an example with an extra allele to show how output is whole genotype from that
-fish at that locus).
+As an example, let's look at our raw data, which likely has TONS of extra alleles:
+```{r}
+exampleBadData <- find_contaminated_samples(hap_raw)
+
+head(exampleBadData)
+```
+And yep, we've got some extra alleles there.  Note how this will export the whole
+genotype for a fish at a locus if there are extra alleles so you can assess read-depth
+and allele balance to see if you should adjust your filtering parameters.  
 
 Let's move onto additional filters.
 
@@ -235,7 +251,9 @@ Let's move onto additional filters.
 At this point you can look for which samples were filtered out completely when we
 filtered our data.
 
-This did not change from Neil's original code
+This did not change from Neil's original code (however, know that this just checks
+indiv.IDs, not indiv.ID + group, so if you have reruns, you may want to check this
+with an anti_join, rather than this function).
 ```{r}
 missing_samples <- find_missing_samples(hap_raw, hap_NX_filter)
 
@@ -260,15 +278,20 @@ sampsheets <- read_samplesheets(
   n_skip = 21
 )
 
-#Our samples in the sample sheet are noted "CH" for chinook, but are "chinook" not "CH" in haplot, so fixing that with this next line (also dropping empty rows)
+#Our samples in the sample sheet are noted "CH" for chinook, but are "chinook" 
+#not "CH" in haplot, so fixing that with this next code chunk (also dropping 
+#empty rows)
 sampsheets <- sampsheets %>%
   mutate(Sample_ID = gsub("CH_", "chinook", Sample_ID)) %>%
   filter(!is.na(Sample_ID))
 
+#find missing samples
 complete_fails <- sampsheets %>% filter(!Sample_ID %in% hap_raw$indiv.ID)
 
 head(complete_fails)
 ```
+And hey! No samples dropped out before running microhaplot, so that's good!
+
 If you are using NMFS IDs as the haplot sample IDs (like what we do in our snakemake
 pipeline) you can split the Sample_Plate info into NMFS ID, Box, and Well.  Here's 
 how you might do that!
@@ -281,13 +304,16 @@ complete_fails_nmfs <- sampsheets_NMFSIDs %>% filter(!NMFS_DNA_ID %in% hap_raw$i
 
 head(complete_fails)
 ```
+Obviously this just spits back our entire samplesheet since none of our samples 
+in the example data are named by their NMFS IDs.
 
 # Find duplicates (i.e. reruns)
 
-You may have intentional reruns (i.e. samples with the same sample ID, but were 
-run on different miseq runs for some reason or another).  If this is the case, we
-have a bit of code that can identify samples with the same indiv.ID but different
-groups.
+You may have some sample reruns (i.e. samples with the same sample ID, but were 
+run on different miseq runs for some reason or another) OR have accidentally given
+two different fish the same indiv.ID in your microhaplot run.  If this is the case, 
+we have a bit of code that can identify samples with the same indiv.ID but different
+groups. 
 
 Let's make a quick fake sample dataset that has sample "chinook18699" in there 
 three times: the original run; a second run with group "FakeRun1" and missing the
@@ -306,8 +332,9 @@ FakeDupData <- hap_light_filter %>%
 
 ```
 
-And now we can run find_duplicates() to find duplicate samples in our fake
-dataset
+## Find duplicates
+
+We can run find_duplicates() to find duplicate samples in our fake dataset like so:
 ```{r}
 find_duplicates(FakeDupData)
 ```
@@ -315,6 +342,8 @@ find_duplicates(FakeDupData)
 Now at this point we have two options: we can keep all of our runs, but give them 
 unique names so they don't cause any issues moving forward, or we can just keep 
 the one that genotypes at the most loci.
+
+## Rename duplicates
 
 For the first option, we can use the resolve_duplicate_samples() function with
 the "rename" option.  This will rename each of our runs adding an "_1" to the run 
@@ -329,11 +358,13 @@ head(filter(FakeDupData_DupsRename, grepl("chinook18699", indiv.ID)) %>%
   arrange(locus, indiv.ID))
 ```
 
-If we know we were rerunning these samples because it failed another run, we can 
-just keep whichever run has more loci passing filter with the "drop" option.  In
-our fake case, we know that the original data (group "WRcarc") has the most loci
-passing filter, so if we run this, we should only have data from the "WRcarc" 
-group for fish "chinook18699"
+## Drop duplicates
+
+Alternatively you can use the "drop" option.  So, rather than keeping all of our
+runs, we keep just the run that has the most loci genotyped.  In our fake data's 
+case, we know that the original data (group "WRcarc") has the most loci passing 
+ilter, so if we run this, we should only have data from the "WRcarc" group for 
+fish "chinook18699"
 
 ```{r}
 FakeDupData_DupsDropped <- resolve_duplicate_samples(FakeDupData, resolve = "drop")
@@ -426,7 +457,7 @@ raw data, but I tend to do it right before I need to convert my data to other fo
 ```{r}
 head(arrange(hap_NoLowTypers, indiv.ID, locus))
 
-hap_HomsFixed <- add_homozygote_second_allele(hap_NoLowTypers)
+hap_HomsFixed <- add_hom_second_allele(hap_NoLowTypers)
 
 head(arrange(hap_HomsFixed, indiv.ID, locus))
 ```
@@ -595,7 +626,7 @@ sex. Sex is M, F or ? (for unknown).  No additional columns allowed in that obje
 my edits of the other microhaplotopia functions.  Let me know if I broke it and I'm
 happy to fix it.
 
-```{r}
+```
 mhap_transform(
   long_genos = hap_HomsFixed, 
   program = "franz",
