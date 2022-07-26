@@ -246,6 +246,15 @@ And yep, we've got some extra alleles there.  Note how this will export the whol
 genotype for a fish at a locus if there are extra alleles so you can assess read-depth
 and allele balance to see if you should adjust your filtering parameters.  
 
+If you think these are just one-off issues, you can remove just the genotypes with
+the extra alleles with a simple anti_join like below:
+
+```{r}
+hap_fullFilter <- hap_NX_filter %>%
+  anti_join(BadFishGenos)
+```
+
+
 Let's move onto additional filters.
 
 # Find missing samples
@@ -257,7 +266,7 @@ This did not change from Neil's original code (however, know that this just chec
 indiv.IDs, not indiv.ID + group, so if you have reruns, you may want to check this
 with an anti_join, rather than this function).
 ```{r}
-missing_samples <- find_missing_samples(hap_raw, hap_NX_filter)
+missing_samples <- find_missing_samples(hap_raw, hap_fullFilter)
 
 head(missing_samples)
 ```
@@ -400,7 +409,7 @@ loci2chuck <- c(
 )
 
 hap_DropLocs <- filter_bad_loci(
-  long_genos = hap_NX_filter,
+  long_genos = hap_fullFilter,
   bad_loci = loci2chuck
 )
 
@@ -420,7 +429,7 @@ Let's do a quick example where I drop a locus ("tag_id_999") to illustrate how
 that effects the total number of loci.
 
 ```{r}
-hap_miss_example <- hap_NX_filter %>%
+hap_miss_example <- hap_fullFilter %>%
   filter(!locus == "tag_id_999")
 
 calculate_missing_data(hap_miss_example) %>%
@@ -442,10 +451,11 @@ you to keep it in your final dataset.
 
 Note that this uses the "indiv.ID" column assuming it is unique so you MUST deal
 with duplicate indiv.IDs BEFORE running this function (see "Find duplicates (i.e. 
-reruns)" section abaove).
+reruns)" section above).  Since we didn't have any duplicates in this example, 
+we're just going to use our filtered dataset.
 
 ```{r}
-hap_NoLowTypers <- filter_missing_data(hap_NX_filter, n_locs = 100)
+hap_NoLowTypers <- filter_missing_data(hap_fullFilter, n_locs = 100)
 ```
 
 # Add second allele to homozygotes
