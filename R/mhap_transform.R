@@ -37,9 +37,14 @@ mhap_transform <- function(long_genos, program, metadata = NULL, pops = FALSE) {
     count(indiv.ID,locus) %>%
     distinct(n) %>% pull(n)
 
-  if (!test_df == 2) {
-    stop("input dataframe does not have 2 rows per locus per individual")
+  if (length(test_df) != 1) {
+    stop("Input dataframe has variable number of rows per locus per individual.  Please confirm that you have handled duplicate samples and added the second allele to homozygote genotypes.")
   }
+
+  if (test_df[1] != 2) {
+    stop("Input dataframe does not have 2 rows per locus per individual.  Please confirm that you have handled duplicate samples and added the second allele to homozygote genotypes.")
+  }
+
 
   if (program == "CKMRsim") {
 
