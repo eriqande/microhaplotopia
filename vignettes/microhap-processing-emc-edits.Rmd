@@ -1,6 +1,6 @@
 ---
 title: "microhap-processing-emc-edits"
-author: Ellen M. Campbell
+author: "Ellen M. Campbell"
 output: 
   rmarkdown::html_vignette:
     toc: true
