@@ -220,6 +220,38 @@ hap_NX_filter <- NXAlleles %>%
   anti_join(hap_light_filter, .)
 ```
 
+#### Making your datset old-microhaplotopia compatible
+
+Need to make your data compatible with an old Neil dataset or another dataset that
+was processed with old microhaplotopia?  Here's how Neil used to filter data!
+
+```{r}
+#set your filtering crieria like above for light_filters
+haplotype_depth <- 5
+total_depth <- 20
+allele_balance <- 0.3
+
+#Apply Neil's filtering regime
+
+hap_NX_filter_Neil <- hap_raw %>%
+      filter(!str_detect(haplo, "N|X"),
+             depth >= haplotype_depth) %>%
+      arrange(indiv.ID, locus, desc(depth)) %>%
+      group_by(indiv.ID, locus) %>%
+      mutate(rank = row_number(),
+             allele.balance = depth / depth[1]) %>%
+      filter(allele.balance >= allele_balance) %>%
+      mutate(gt_type = ifelse(n() > 1, "het", "hom"),
+             depth_total = ifelse(gt_type == "het", sum(depth[1], depth[2]), depth)) %>%
+      ungroup() %>%
+      filter(depth_total >= total_depth)
+```
+
+At this point Neil would then filter out genotypes with extra alleles (which we
+do next!) and then add extra rows for homozygotes (which I do right before converting
+these genotypes to other formats because there's really no reason to carry around
+those extra rows until then).
+
 ### Detecting and handling genotypes with extra alleles
 
 NEXT!  Let's look for contamination (i.e. individuals with more than a maximum number
