@@ -51,12 +51,12 @@ read_unfiltered_observed <- function(datapath, microhaplot_columns = TRUE) {
     filepath,
     id = "source",
     col_names = our_col_names,
-    col_types = our_col_types
+    col_types = our_col_types,
+    na = c("")
   ) %>%
     dplyr::select("source", "group","indiv.ID", "locus", "haplo", "depth", "allele.balance", "rank")
 
-  hap_raw <- hap_raw  %>%
-    dplyr::filter(!is.na(depth))
+  hap_raw <- hap_raw %>% dplyr::filter(!is.na(depth))
 
   hap_raw
 }
